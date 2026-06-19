@@ -4,22 +4,22 @@ A web application for personal/business finance management — loan interest cal
 
 > 🇻🇳 Xem bản tiếng Việt ở phần dưới / Vietnamese version below.
 
-## ✨ Features
+## Features
 
-- 💰 Loan interest calculation
-- 🏦 Savings account management
-- 📊 Cash flow analysis (NPV, IRR, EIR)
-- 🔐 User authentication
-- 🌗 Dark / Light mode support
+- Loan interest calculation
+- Savings account management
+- Cash flow analysis (NPV, IRR, EIR)
+- User authentication
+- Dark / Light mode support
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Backend:** ASP.NET Core MVC, C#
 - **ORM:** Entity Framework Core
 - **Database:** SQLite
 - **Frontend:** HTML, CSS, JavaScript, Bootstrap
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - [.NET SDK](https://dotnet.microsoft.com/download) (8.0 or later)
@@ -34,13 +34,13 @@ dotnet ef database update
 dotnet run
 ```
 
-The application will be available at `https://localhost:xxxx` (port shown in terminal output).
+The application will be available at `https://localhost:5039` 
 
-## 📸 Screenshots
+## Screenshots
 
 <!-- Add screenshots here -->
 
-## 👥 Team
+## Team
 
 | Name | Role |
 |------|------|
@@ -50,7 +50,7 @@ The application will be available at `https://localhost:xxxx` (port shown in ter
 
 Class CQ61/41.1LT — Học viện Tài chính (Academy of Finance)
 
-## 📄 License
+## License
 
 This project is developed for academic purposes.
 
@@ -60,22 +60,22 @@ This project is developed for academic purposes.
 
 Ứng dụng web quản lý tài chính cá nhân/doanh nghiệp — tính lãi vay, quản lý tiết kiệm, và phân tích dòng tiền (NPV, IRR, EIR) — xây dựng bằng ASP.NET Core MVC.
 
-## ✨ Tính năng
+## Tính năng
 
-- 💰 Tính lãi vay
-- 🏦 Quản lý tài khoản tiết kiệm
-- 📊 Phân tích dòng tiền (NPV, IRR, EIR)
-- 🔐 Xác thực người dùng
-- 🌗 Hỗ trợ chế độ Sáng/Tối
+- Tính lãi vay
+- Quản lý tài khoản tiết kiệm
+- Phân tích dòng tiền (NPV, IRR, EIR)
+- Xác thực người dùng
+- Hỗ trợ chế độ Sáng/Tối
 
-## 🛠️ Công nghệ sử dụng
+## Công nghệ sử dụng
 
 - **Backend:** ASP.NET Core MVC, C#
 - **ORM:** Entity Framework Core
 - **Cơ sở dữ liệu:** SQLite
 - **Frontend:** HTML, CSS, JavaScript, Bootstrap
 
-## 🚀 Hướng dẫn cài đặt
+## Hướng dẫn cài đặt
 
 ### Yêu cầu
 - [.NET SDK](https://dotnet.microsoft.com/download) (bản 8.0 hoặc mới hơn)
@@ -90,13 +90,13 @@ dotnet ef database update
 dotnet run
 ```
 
-Ứng dụng sẽ chạy tại `https://localhost:xxxx` (cổng hiển thị trong terminal).
+Ứng dụng sẽ chạy tại `https://localhost:5039` 
 
-## 📸 Ảnh chụp giao diện
+## Ảnh chụp giao diện
 
 <!-- Thêm ảnh chụp giao diện ở đây -->
 
-## 👥 Nhóm thực hiện
+## Nhóm thực hiện
 
 | Họ tên | Vai trò |
 |------|------|
@@ -106,6 +106,6 @@ dotnet run
 
 Lớp CQ61/41.1LT — Học viện Tài chính
 
-## 📄 Bản quyền
+## Bản quyền
 
 Dự án được phát triển phục vụ mục đích học tập.
