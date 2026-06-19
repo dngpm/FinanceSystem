@@ -1,0 +1,320 @@
+@model SavingsInfo
+
+@{
+    ViewData["Title"] = "Tính Tiết Kiệm";
+}
+
+<style>
+    /* 1. ĐỊNH DẠNG KHUNG VIỀN RÕ NÉT CỦA CÁC Ô NHẬP LIỆU */
+    .form-control, .form-select, .input-group-text {
+        border: 2px solid #b0b8c0 !important; /* Viền dày và rõ nét ở chế độ sáng */
+        transition: all 0.2s ease-in-out;
+    }
+    
+        .form-control:focus, .form-select:focus {
+            border-color: #0d6efd !important;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15) !important;
+        }
+
+    /* 2. ĐỊNH DẠNG NÚT BẤM DỰA TRÊN CHẾ ĐỘ NỀN */
+    .btn-submit-savings {
+        background-color: #212529 !important;
+        color: #ffffff !important;
+        border: 2px solid #212529 !important;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+    
+        .btn-submit-savings:hover {
+            background-color: #343a40 !important;
+            border-color: #343a40 !important;
+        }
+
+    /* Sử dụng kép @@media để tránh lỗi Razor Engine */
+    @@media (prefers-color-scheme: dark) {
+        .form-control, .form-select, .input-group-text {
+            border-color: #6c757d !important; /* Viền sáng hơn để nổi bật trên nền tối */
+        }
+
+        .btn-submit-savings {
+            background-color: #0d6efd !important; /* Màu xanh nổi bật ở chế độ tối */
+            color: #ffffff !important;
+            border-color: #0d6efd !important;
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+        }
+
+            .btn-submit-savings:hover {
+                background-color: #0b5ed7 !important;
+                border-color: #0b5ed7 !important;
+            }
+    }
+
+    /* Hỗ trợ thuộc tính dữ liệu dark theme của Bootstrap 5.3+ */
+    [data-bs-theme="dark"] .form-control,
+    [data-bs-theme="dark"] .form-select,
+    [data-bs-theme="dark"] .input-group-text {
+        border-color: #6c757d !important;
+    }
+    
+    [data-bs-theme="dark"] .btn-submit-savings {
+        background-color: #0d6efd !important;
+        color: #ffffff !important;
+        border-color: #0d6efd !important;
+        box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+    }
+
+        [data-bs-theme="dark"] .btn-submit-savings:hover {
+            background-color: #0b5ed7 !important;
+        }
+</style>
+
+<div class="container page-shell">
+
+    <section class="tool-intro">
+        <div>
+            <h1>Ước tính tiền lãi và số tiền nhận khi đáo hạn</h1>
+            <p>
+                Dùng công cụ này khi bạn muốn so sánh kỳ hạn gửi, cách nhận lãi
+                và xem bạn sẽ mất bao nhiêu nếu rút tiền trước hạn.
+            </p>
+        </div>
+        <aside class="example-box">
+            <h2>Ví dụ mẫu</h2>
+            <p>Gửi 100.000.000 VND trong 12 tháng, lãi suất 5%/năm, nhận lãi cuối kỳ.</p>
+            <button type="button" class="btn btn-outline-primary btn-sm" id="fillSavingsExample">
+                Điền ví dụ này
+            </button>
+        </aside>
+    </section>
+
+    <div class="row g-4 align-items-start">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white p-4">
+                    <h2 class="mb-1">Thông tin gửi tiết kiệm</h2>
+                    <p class="mb-0 opacity-75">Nhập theo thông tin ngân hàng thông báo cho bạn.</p>
+                </div>
+
+                <div class="card-body p-4 p-lg-5">
+                    <form asp-action="Calculate" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <div asp-validation-summary="All" class="alert alert-danger mb-4"></div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label asp-for="Principal" class="form-label fw-bold">
+                                    Số tiền gửi
+                                    <span class="help-dot" data-bs-toggle="tooltip"
+                                          title="Số tiền bạn muốn gửi vào ngân hàng. Nhập số nguyên, ví dụ 100000000 cho 100 triệu đồng.">?</span>
+                                </label>
+                                <div class="input-group">
+                                    <input type="text"
+                                           id="PrincipalDisplay"
+                                           class="form-control form-control-lg"
+                                           placeholder="Ví dụ: 100.000.000" />
+                                    <span class="input-group-text">VND</span>
+                                    <input type="hidden" asp-for="Principal" id="Principal" />
+                                </div>
+                                <span asp-validation-for="Principal" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <label asp-for="AnnualInterestRate" class="form-label fw-bold">
+                                    Lãi suất có kỳ hạn
+                                    <span class="help-dot" data-bs-toggle="tooltip"
+                                          title="Nhập lãi suất ngân hàng công bố theo %/năm. Ví dụ ngân hàng báo 5%/năm thì nhập 5.">?</span>
+                                </label>
+                                <div class="input-group">
+                                    <input asp-for="AnnualInterestRate"
+                                           id="AnnualInterestRate"
+                                           class="form-control form-control-lg"
+                                           placeholder="Ví dụ: 5" />
+                                    <span class="input-group-text">%/năm</span>
+                                </div>
+                                <div class="form-text">Nhập số nguyên hoặc thập phân, ví dụ 5 hoặc 5.5.</div>
+                                <span asp-validation-for="AnnualInterestRate" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label asp-for="TermMonths" class="form-label fw-bold">
+                                    Kỳ hạn gửi
+                                    <span class="help-dot" data-bs-toggle="tooltip"
+                                          title="Số tháng bạn muốn gửi. Phổ biến: 1, 3, 6, 9, 12, 18, 24 tháng. Kỳ hạn dài hơn thường có lãi suất cao hơn.">?</span>
+                                </label>
+                                <div class="input-group">
+                                    <input asp-for="TermMonths"
+                                           class="form-control form-control-lg"
+                                           placeholder="Ví dụ: 12" />
+                                    <span class="input-group-text">tháng</span>
+                                </div>
+                                <span asp-validation-for="TermMonths" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <label asp-for="DepositDate" class="form-label fw-bold">Ngày gửi</label>
+                                <input asp-for="DepositDate"
+                                       type="date"
+                                       class="form-control form-control-lg" />
+                                <div class="form-text">Dùng để tính ngày đáo hạn.</div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label asp-for="PaymentType" class="form-label fw-bold">
+                                    Hình thức nhận lãi
+                                    <span class="help-dot" data-bs-toggle="tooltip"
+                                          title="Cuối kỳ: nhận toàn bộ lãi khi đáo hạn. Hàng tháng/quý: nhận lãi định kỳ. Lãi kép: lãi được cộng vào gốc và tiếp tục sinh lãi.">?</span>
+                                </label>
+                                <select asp-for="PaymentType" class="form-select form-select-lg">
+                                    <option value="0">Cuối kỳ – nhận lãi khi đáo hạn</option>
+                                    <option value="1">Hàng tháng – nhận lãi mỗi tháng</option>
+                                    <option value="2">Hàng quý – nhận lãi mỗi 3 tháng</option>
+                                    <option value="3">Lãi kép – lãi nhập gốc, sinh lãi tiếp</option>
+                                </select>
+                                <div class="form-text">
+                                    Lại kép có lợi hơn khi gửi dài hạn vì lãi được cộng vào gốc.
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <label asp-for="DemandInterestRate" class="form-label fw-bold">
+                                    Lãi suất không kỳ hạn
+                                    <span class="help-dot" data-bs-toggle="tooltip"
+                                          title="Lãi suất áp dụng khi rút trước hạn, thường chỉ 0.1–0.2%/năm. Dùng để tính thiệt hại nếu rút sớm.">?</span>
+                                </label>
+                                <div class="input-group">
+                                    <input asp-for="DemandInterestRate"
+                                           id="DemandInterestRate"
+                                           class="form-control form-control-lg"
+                                           placeholder="Ví dụ: 0.1" />
+                                    <span class="input-group-text">%/năm</span>
+                                </div>
+                                <div class="form-text">
+                                    Lãi áp dụng khi rút trước hạn. Thường 0.1%/năm.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="EarlyWithdrawAtMonth" class="form-label fw-bold">
+                                Rút trước hạn tại tháng thứ (để trống nếu giữ đến đáo hạn)
+                                <span class="help-dot" data-bs-toggle="tooltip"
+                                      title="Nếu bạn dự kiến rút sớm, nhập số tháng bạn dự định rút. Ví dụ nhập 6 để xem ảnh hưởng nếu rút ở tháng thứ 6 của kỳ gửi 12 tháng.">?</span>
+                            </label>
+                            <input asp-for="EarlyWithdrawAtMonth"
+                                   class="form-control form-control-lg"
+                                   placeholder="Để trống nếu giữ đến đáo hạn" />
+                            <div class="form-text">
+                                Điền để xem bạn sẽ mất bao nhiêu tiền lãi nếu rút trước hạn.
+                            </div>
+                        </div>
+
+                        <div class="d-grid mt-5">
+                            <button type="submit" class="btn btn-submit-savings btn-lg py-3">
+                                <i class="fa-solid fa-calculator me-2"></i>Tính tiền lãi
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <aside class="guide-panel sticky-lg-top">
+                <h2>Lưu ý khi gửi tiết kiệm</h2>
+                <div class="guide-item">
+                    <strong>Kỳ hạn dài hơn = lãi suất cao hơn</strong>
+                    <p>Gửi 12 tháng thường có lãi suất cao hơn gửi 3 tháng. Nếu không cần tiền trong thời gian đó, nên chọn kỳ hạn dài.</p>
+                </div>
+                <div class="guide-item">
+                    <strong>Rút trước hạn thiệt thòi nhiều</strong>
+                    <p>Khi rút sớm, ngân hàng chỉ tính lãi suất không kỳ hạn (~0.1%/năm) thay vì lãi suất đã thỏa thuận. Thiệt hại có thể rất lớn.</p>
+                </div>
+                <div class="guide-item">
+                    <strong>Lãi kép có lợi dài hạn</strong>
+                    <p>Với lãi kép, tiền lãi được cộng vào gốc và tiếp tục sinh lãi. Hiệu quả rõ hơn khi gửi nhiều năm.</p>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            // ===== FORMAT TIỀN =====
+            const display = document.getElementById("PrincipalDisplay");
+            const hidden = document.getElementById("Principal");
+
+            if (display && hidden) {
+                display.addEventListener("focus", function () {
+                    if (this.value === "0") this.value = "";
+                });
+                display.addEventListener("input", function () {
+                    let raw = this.value.replace(/\D/g, '');
+                    hidden.value = raw;
+                    this.value = raw ? Number(raw).toLocaleString("vi-VN") : "";
+                });
+                // Pre-format existing value on page load
+                if (hidden.value && hidden.value !== "0") {
+                    display.value = Number(hidden.value).toLocaleString("vi-VN");
+                }
+            }
+
+            // ===== XÓA SỐ 0 MẶC ĐỊNH =====
+            document.querySelectorAll('input[type="number"]').forEach(function (input) {
+                input.addEventListener("focus", function () {
+                    if (this.value === "0" || this.value === "0.0" || this.value === "0.00") {
+                        this.value = "";
+                    }
+                });
+            });
+
+            const annualRate = document.getElementById("AnnualInterestRate");
+            if (annualRate) {
+                annualRate.addEventListener("focus", function () {
+                    if (this.value === "0" || this.value === "0,00" || this.value === "0.00") this.value = "";
+                });
+            }
+
+            const demandRate = document.getElementById("DemandInterestRate");
+            if (demandRate) {
+                demandRate.addEventListener("focus", function () {
+                    if (parseFloat(this.value) === 0.1 || this.value === "0" || this.value === "0.00") this.value = "";
+                });
+            }
+
+            // ===== ĐIỀN VÍ DỤ =====
+            const fillBtn = document.getElementById("fillSavingsExample");
+            if (fillBtn) {
+                fillBtn.addEventListener("click", function () {
+                    if (display) display.value = Number(100000000).toLocaleString("vi-VN");
+                    if (hidden) hidden.value = "100000000";
+                    if (annualRate) annualRate.value = "5";
+                    const termInput = document.querySelector('[name="TermMonths"]');
+                    if (termInput) termInput.value = "12";
+                    const paymentType = document.querySelector('[name="PaymentType"]');
+                    if (paymentType) paymentType.value = "0";
+                    const depositDate = document.querySelector('[name="DepositDate"]');
+                    if (depositDate) depositDate.value = new Date().toISOString().split('T')[0];
+                    if (demandRate) demandRate.value = "0.1";
+                });
+            }
+
+            // ===== TOOLTIPS =====
+            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+                new bootstrap.Tooltip(el);
+            });
+        });
+    </script>
+}

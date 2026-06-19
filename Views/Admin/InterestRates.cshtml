@@ -1,0 +1,168 @@
+@model List<FinanceSystem.Models.Entities.InterestRateTable>
+
+@{
+    ViewData["Title"] = "Biểu Lãi Suất";
+    var savings = Model.Where(r => r.RateType == "Savings").ToList();
+    var loans   = Model.Where(r => r.RateType == "Loan").ToList();
+}
+
+<div class="container page-shell">
+
+    <section class="tool-intro" style="margin-bottom: 24px;">
+        <div>
+            <span class="eyebrow">Quản trị hệ thống</span>
+            <h1><i class="fa-solid fa-percent me-2"></i>Biểu Lãi Suất</h1>
+            <p>Cập nhật lãi suất tiền gửi và lãi suất vay theo biến động thị trường. Người dùng chỉ được xem và áp dụng, không được sửa.</p>
+        </div>
+        <aside class="example-box" style="display:flex;flex-direction:column;gap:10px;">
+            <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+                <i class="fa-solid fa-gauge me-1"></i> Bảng điều khiển
+            </a>
+            <a asp-action="AddRate" class="btn btn-warning btn-sm">
+                <i class="fa-solid fa-plus me-1"></i> Thêm kỳ hạn mới
+            </a>
+        </aside>
+    </section>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fa-solid fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="alert alert-warning d-flex align-items-center gap-2 mb-4">
+        <i class="fa-solid fa-triangle-exclamation fa-lg"></i>
+        <span>Thay đổi lãi suất ảnh hưởng đến toàn bộ tính toán tham chiếu của hệ thống. Hãy kiểm tra kỹ trước khi lưu.</span>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header p-3 d-flex justify-content-between align-items-center"
+             style="background:rgba(16,185,129,0.12); border-left: 4px solid #10b981;">
+            <h5 class="mb-0 text-success">
+                <i class="fa-solid fa-piggy-bank me-2"></i>Lãi suất tiết kiệm
+            </h5>
+            <span class="badge bg-success">@savings.Count kỳ hạn</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive finance-table-wrap">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-3">Kỳ hạn</th>
+                            <th>Số tháng</th>
+                            <th>Lãi suất (%/năm)</th>
+                            <th>Ghi chú</th>
+                            <th>Cập nhật lúc</th>
+                            <th>Người sửa</th>
+                            <th class="text-end pe-3">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in savings)
+                        {
+                            <tr>
+                                <td class="ps-3 fw-semibold">@r.TermLabel</td>
+                                <td class="text-muted">@r.TermMonths</td>
+                                <td>
+                                    <span class="badge fs-6 fw-bold"
+                                          style="background:rgba(16,185,129,0.15);color:#059669;letter-spacing:0.5px;">
+                                        @r.AnnualRatePercent.ToString("N2")%
+                                    </span>
+                                </td>
+                                <td class="text-muted small">@(string.IsNullOrEmpty(r.Note) ? "-" : r.Note)</td>
+                                <td class="text-muted small">@r.UpdatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td class="text-muted small">@r.UpdatedBy</td>
+                                <td class="text-end pe-3">
+                                    <div class="d-flex gap-1 justify-content-end">
+                                        <a asp-action="EditRate" asp-route-id="@r.Id"
+                                           class="btn btn-sm btn-outline-success" title="Sửa lãi suất">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </a>
+                                        <form asp-action="DeleteRate" method="post" class="d-inline"
+                                              onsubmit="return confirm('Xóa kỳ hạn @r.TermLabel?')">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@r.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header p-3 d-flex justify-content-between align-items-center"
+             style="background:rgba(239,68,68,0.10); border-left: 4px solid #ef4444;">
+            <h5 class="mb-0 text-danger">
+                <i class="fa-solid fa-house-chimney me-2"></i>Lãi suất cho vay
+            </h5>
+            <span class="badge bg-danger">@loans.Count kỳ hạn</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive finance-table-wrap">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-3">Kỳ hạn</th>
+                            <th>Tháng chuẩn</th>
+                            <th>Lãi suất (%/năm)</th>
+                            <th>Ghi chú</th>
+                            <th>Cập nhật lúc</th>
+                            <th>Người sửa</th>
+                            <th class="text-end pe-3">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in loans)
+                        {
+                            <tr>
+                                <td class="ps-3 fw-semibold">@r.TermLabel</td>
+                                <td class="text-muted">@r.TermMonths</td>
+                                <td>
+                                    <span class="badge fs-6 fw-bold"
+                                          style="background:rgba(239,68,68,0.12);color:#dc2626;letter-spacing:0.5px;">
+                                        @r.AnnualRatePercent.ToString("N2")%
+                                    </span>
+                                </td>
+                                <td class="text-muted small">@(string.IsNullOrEmpty(r.Note) ? "-" : r.Note)</td>
+                                <td class="text-muted small">@r.UpdatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td class="text-muted small">@r.UpdatedBy</td>
+                                <td class="text-end pe-3">
+                                    <div class="d-flex gap-1 justify-content-end">
+                                        <a asp-action="EditRate" asp-route-id="@r.Id"
+                                           class="btn btn-sm btn-outline-danger" title="Sửa lãi suất">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </a>
+                                        <form asp-action="DeleteRate" method="post" class="d-inline"
+                                              onsubmit="return confirm('Xóa kỳ hạn @r.TermLabel?')">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@r.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-end">
+        <a asp-action="AddRate" class="btn btn-warning">
+            <i class="fa-solid fa-plus me-1"></i> Thêm kỳ hạn mới
+        </a>
+    </div>
+
+</div>

@@ -1,0 +1,672 @@
+@model FinanceSystem.Models.ViewModels.CashFlowSummaryViewModel
+
+@{
+    ViewData["Title"] = "Dashboard Dòng Tiền";
+}
+
+<style>
+    /* Bảng có viền đậm, rõ ràng */
+    .cashflow-table {
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+        border: 1px solid #adb5bd;
+        border-radius: 0.5rem;
+        overflow: hidden;
+    }
+
+        .cashflow-table th,
+        .cashflow-table td {
+            border: 1px solid #ced4da;
+            padding: 0.75rem;
+            vertical-align: middle;
+        }
+
+        .cashflow-table thead th {
+            background-color: #212529;
+            color: white;
+            border-color: #495057;
+        }
+
+        /* Hàng tổng (tfoot) */
+        table.cashflow-table > tfoot > tr > td {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            font-weight: 900 !important;
+            font-size: 1.08rem !important;
+            border-top: 2.5px solid #94a3b8 !important;
+        }
+
+        /* body.light-mode override — tự động hợp site.css bật light mode */
+        body.light-mode table.cashflow-table > tfoot > tr > td {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border-top: 2.5px solid #94a3b8 !important;
+        }
+
+    /* Badge màu tím, to hơn */
+    .badge.bg-purple {
+        background-color: #6f42c1 !important;
+        color: white !important;
+        font-size: 1.1rem;
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        font-weight: 500;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    /* Chế độ tối (prefers-color-scheme) */
+    @@media (prefers-color-scheme: dark) {
+        .cashflow-table {
+            border-color: #6c757d;
+        }
+
+            .cashflow-table th,
+            .cashflow-table td {
+                border-color: #495057;
+            }
+
+            .cashflow-table thead th {
+                background-color: #0d6efd;
+                border-color: #0a58ca;
+            }
+            /* Các ô dữ liệu (tbody) có chữ màu đen */
+            .cashflow-table tbody td {
+                color: #000000 !important;
+                background-color: #f8f9fa;
+            }
+
+                .cashflow-table tbody td.text-danger {
+                    color: #dc2626 !important;
+                }
+
+                .cashflow-table tbody td:first-child strong {
+                    color: #000000 !important;
+                }
+            /* Hàng tổng — dark (prefers-color-scheme) */
+            table.cashflow-table > tfoot > tr > td {
+                background-color: #ffffff !important;
+                color: #0f172a !important;
+                border-top: 2.5px solid #cbd5e1 !important;
+            }
+        /* Badge tím vẫn giữ màu, nhưng có thể thêm viền sáng để nổi */
+        .badge.bg-purple {
+            background-color: #8b5cf6 !important;
+            box-shadow: 0 2px 8px rgba(139,92,246,0.4);
+        }
+    }
+
+    /* Hỗ trợ data-bs-theme="dark" (Bootstrap 5.3) */
+    [data-bs-theme="dark"] .cashflow-table {
+        border-color: #6c757d;
+    }
+
+        [data-bs-theme="dark"] .cashflow-table th,
+        [data-bs-theme="dark"] .cashflow-table td {
+            border-color: #495057;
+        }
+
+        [data-bs-theme="dark"] .cashflow-table thead th {
+            background-color: #0d6efd;
+            border-color: #0a58ca;
+        }
+
+        [data-bs-theme="dark"] .cashflow-table tbody td {
+            color: #000000 !important;
+            background-color: #f8f9fa;
+        }
+
+            [data-bs-theme="dark"] .cashflow-table tbody td.text-danger {
+                color: #dc2626 !important;
+            }
+
+            [data-bs-theme="dark"] .cashflow-table tbody td:first-child strong {
+                color: #000000 !important;
+            }
+
+        [data-bs-theme="dark"] table.cashflow-table > tfoot > tr > td {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border-top: 2.5px solid #cbd5e1 !important;
+        }
+
+    [data-bs-theme="dark"] .badge.bg-purple {
+        background-color: #8b5cf6 !important;
+        box-shadow: 0 2px 8px rgba(139,92,246,0.4);
+    }
+
+    /* Metric cards */
+    .metric-card {
+        background-color: #ffffff;
+        transition: background-color 0.2s;
+    }
+    .metric-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-bottom: 0.4rem;
+    }
+    .metric-value {
+        font-size: 1.1rem;
+        color: #212529;
+        word-break: keep-all;
+        overflow-wrap: normal;
+    }
+    /* dark mode metric cards */
+    @@media (prefers-color-scheme: dark) {
+        .metric-card { background-color: #ffffff !important; }
+        .metric-label { color: #6c757d !important; }
+        .metric-value { color: #212529 !important; }
+    }
+    [data-bs-theme="dark"] .metric-card { background-color: #ffffff !important; }
+    [data-bs-theme="dark"] .metric-label { color: #6c757d !important; }
+    [data-bs-theme="dark"] .metric-value { color: #212529 !important; }
+    [data-bs-theme="dark"] .metric-card .text-success { color: #198754 !important; }
+    [data-bs-theme="dark"] .metric-card .text-danger  { color: #dc3545 !important; }
+    [data-bs-theme="dark"] .metric-card .text-warning { color: #fd7e14 !important; }
+    @@media (prefers-color-scheme: dark) {
+        .metric-card .text-success { color: #198754 !important; }
+        .metric-card .text-danger  { color: #dc3545 !important; }
+        .metric-card .text-warning { color: #fd7e14 !important; }
+    }
+
+    /* Nút "Nhập lại" — nổi rõ ở cả chế độ sáng và tối */
+    .btn-recalc {
+        background-color: #f1f5f9;
+        color: #1e293b;
+        border: 1.5px solid #94a3b8;
+        font-weight: 600;
+        transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+    }
+    .btn-recalc:hover {
+        background-color: #e2e8f0;
+        color: #0f172a;
+        border-color: #64748b;
+    }
+    [data-bs-theme="dark"] .btn-recalc {
+        background-color: #334155;
+        color: #f1f5f9;
+        border: 1.5px solid #94a3b8;
+    }
+    [data-bs-theme="dark"] .btn-recalc:hover {
+        background-color: #475569;
+        color: #ffffff;
+        border-color: #cbd5e1;
+    }
+</style>
+
+<div class="container page-shell">
+
+    <section class="tool-intro" style="margin-bottom: 24px;">
+        <div>
+            <span class="eyebrow" style="font-size: 1.5rem;"> Bảng tổng hợp dòng tiền</span>
+            <h1>Dashboard dòng tiền</h1>
+            <p>Tổng quan thu chi theo hoạt động kinh doanh, đầu tư và tài chính.</p>
+        </div>
+        <aside class="example-box" style="display:flex; flex-direction:column; justify-content:center; gap:12px;">
+            <a asp-action="Index" class="btn btn-recalc">
+                <i class="fa-solid fa-arrow-left me-1"></i> Nhập lại
+            </a>
+        </aside>
+    </section>
+
+    @if (!string.IsNullOrWhiteSpace(Model.DeficitWarning))
+    {
+        <div class="alert @Model.WarningBadgeClass d-flex gap-3 align-items-start mb-4">
+            <i class="fa-solid fa-triangle-exclamation fa-lg mt-1"></i>
+            <div>
+                <h5 class="mb-1">Thông báo</h5>
+                <p class="mb-0">@Model.DeficitWarning</p>
+            </div>
+        </div>
+    }
+
+    <!-- ── KPI Cards ──  -->
+    <div class="row text-center mb-4 g-3">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm p-4 h-100" style="background-color: white;">
+                <div class="d-flex align-items-center justify-content-center mb-2">
+                    <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2" style="font-size:.7rem;">KINH DOANH</span>
+                </div>
+                <h3 class="@(Model.Totals.TotalOperating >= 0 ? "text-success" : "text-danger") mb-0">@Model.TotalOperatingFormatted</h3>
+                <p class="text-dark small mt-1 mb-0">Tổng dòng tiền hoạt động</p>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm p-4 h-100" style="background-color: white;">
+                <div class="d-flex align-items-center justify-content-center mb-2">
+                    <!-- Badge ĐẦU TƯ màu tím nhạt, chữ tím đậm -->
+                    <span class="badge rounded-pill px-3 py-2" style="font-size:.7rem; background-color: #f0e6ff; color: #4a1d96;">ĐẦU TƯ</span>
+                </div>
+                <h3 class="@(Model.Totals.TotalInvesting >= 0 ? "text-success" : "text-danger") mb-0">@Model.TotalInvestingFormatted</h3>
+                <p class="text-dark small mt-1 mb-0">Tổng dòng tiền đầu tư</p>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm p-4 h-100" style="background-color: white;">
+                <div class="d-flex align-items-center justify-content-center mb-2">
+                    <span class="badge rounded-pill px-3 py-2" style="font-size:.7rem; background-color: #fde6c0; color: #b25d00;">
+                        TÀI CHÍNH
+                    </span>
+                </div>
+                <h3 class="@(Model.Totals.TotalFinancing >= 0 ? "text-success" : "text-danger") mb-0">@Model.TotalFinancingFormatted</h3>
+                <p class="text-dark small mt-1 mb-0">Tổng dòng tiền tài chính</p>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm p-4 h-100" style="background-color: white;">
+                <div class="d-flex align-items-center justify-content-center mb-2">
+                    <!-- Badge TỔNG GIÁ TRỊ THUẦN màu cam đỏ nhạt, chữ cam đỏ đậm -->
+                    <span class="badge rounded-pill px-3 py-2" style="font-size:.7rem; background-color: #fff0e6; color: #b25d00;">TỔNG GIÁ TRỊ THUẦN</span>
+                </div>
+                <h3 class="@(Model.Totals.NetTotal >= 0 ? "text-success" : "text-danger") mb-0">@Model.NetTotalFormatted</h3>
+                <p class="text-dark small mt-1 mb-0">Dòng tiền thuần tổng hợp</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Biểu đồ ──  -->
+    <div class="row mb-4 g-3">
+        <div class="col-12 col-lg-8">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-dark text-white p-3 d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-chart-column"></i>
+                    <h5 class="mb-0">Biểu đồ 3 dòng tiền theo kỳ</h5>
+                </div>
+                <div class="card-body p-3">
+                    <div class="bg-white p-2 rounded" style="border: 1px solid #dee2e6;">
+                        <canvas id="cashFlowStackedChart" style="max-height: 320px; width: 100%;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-lg-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-dark text-white p-3 d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <h5 class="mb-0">Tích lũy dòng tiền</h5>
+                </div>
+                <div class="card-body p-3">
+                    <div class="bg-white p-2 rounded" style="border: 1px solid #dee2e6;">
+                        <canvas id="cumulativeChart" style="max-height: 320px; width: 100%;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Đọc & Giải thích biểu đồ (giữ nguyên) ──  -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header p-3 d-flex align-items-center gap-2" style="background:linear-gradient(135deg,#1e293b,#334155); color:#fff;">
+            <i class="fa-solid fa-magnifying-glass-chart"></i>
+            <h5 class="mb-0">Đọc & Giải thích biểu đồ</h5>
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-4">
+                <div class="col-12 col-lg-6">
+                    <h6 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                        <span class="badge bg-dark"><i class="fa-solid fa-chart-column"></i></span>
+                        Biểu đồ 3 dòng tiền theo kỳ
+                    </h6>
+                    <ul class="list-unstyled mb-0" style="font-size:.93rem; line-height:1.9;">
+                        <li>
+                            <span class="badge me-1" style="background:rgba(59,130,246,0.85);">Kinh doanh</span>
+                            @if (Model.Totals.TotalOperating >= 0)
+                            {
+                                <span>Dòng tiền hoạt động <strong class="text-primary">dương (@Model.TotalOperatingFormatted)</strong> — doanh nghiệp đang tạo ra tiền từ hoạt động cốt lõi.</span>
+                            }
+                            else
+                            {
+                                <span>Dòng tiền hoạt động <strong class="text-danger">âm (@Model.TotalOperatingFormatted)</strong> — hoạt động cốt lõi đang tiêu thụ tiền mặt, cần theo dõi chặt.</span>
+                            }
+                        </li>
+                        <li class="mt-2">
+                            <span class="badge me-1" style="background:rgba(139,92,246,0.85);">Đầu tư</span>
+                            @if (Model.Totals.TotalInvesting < 0)
+                            {
+                                <span>Dòng tiền đầu tư <strong class="text-danger">âm (@Model.TotalInvestingFormatted)</strong> — đang chi tiền mua tài sản / mở rộng, phổ biến ở giai đoạn tăng trưởng.</span>
+                            }
+                            else
+                            {
+                                <span>Dòng tiền đầu tư <strong class="text-success">dương (@Model.TotalInvestingFormatted)</strong> — đang thu hồi vốn đầu tư hoặc bán tài sản.</span>
+                            }
+                        </li>
+                        <li class="mt-2">
+                            <span class="badge me-1" style="background:rgba(234,179,8,0.85); color:#000;">Tài chính</span>
+                            @if (Model.Totals.TotalFinancing >= 0)
+                            {
+                                <span>Dòng tiền tài chính <strong class="text-warning">dương (@Model.TotalFinancingFormatted)</strong> — đang huy động vốn vay hoặc phát hành cổ phần.</span>
+                            }
+                            else
+                            {
+                                <span>Dòng tiền tài chính <strong class="text-danger">âm (@Model.TotalFinancingFormatted)</strong> — đang trả nợ / hoàn trả vốn cho nhà đầu tư.</span>
+                            }
+                        </li>
+                        @if (Model.PeriodSummaries.Count > 1)
+                        {
+                            var bestPeriod = Model.PeriodSummaries.OrderByDescending(p => p.NetCashFlow).First();
+                            var worstPeriod = Model.PeriodSummaries.OrderBy(p => p.NetCashFlow).First();
+                            <li class="mt-2 p-2 rounded-2" style="background:#f0fdf4; color:#14532d;">
+                                <i class="fa-solid fa-arrow-trend-up me-1" style="color:#16a34a;"></i>
+                                Kỳ tốt nhất: <strong>Kỳ @bestPeriod.Period</strong> (@bestPeriod.NetCashFlow.ToString("N0") ₫ dòng tiền thuần)
+                            </li>
+                            @if (worstPeriod.Period != bestPeriod.Period)
+                            {
+                                <li class="mt-2 p-2 rounded-2" style="background:#fff1f2; color:#7f1d1d;">
+                                    <i class="fa-solid fa-arrow-trend-down me-1" style="color:#dc2626;"></i>
+                                    Kỳ yếu nhất: <strong>Kỳ @worstPeriod.Period</strong> (@worstPeriod.NetCashFlow.ToString("N0") ₫ dòng tiền thuần)
+                                </li>
+                            }
+                        }
+                    </ul>
+                </div>
+                <div class="col-12 col-lg-6">
+                    <h6 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                        <span class="badge" style="background:#6366f1;"><i class="fa-solid fa-chart-line"></i></span>
+                        Biểu đồ tích lũy dòng tiền
+                    </h6>
+                    @{
+                        var lastCumulative = Model.PeriodSummaries.LastOrDefault()?.CumulativeBalance ?? 0;
+                        var firstCumulative = Model.PeriodSummaries.FirstOrDefault()?.CumulativeBalance ?? 0;
+                        var trend = lastCumulative - firstCumulative;
+                        var isAlwaysPositive = Model.PeriodSummaries.All(p => p.CumulativeBalance >= 0);
+                    }
+                    <div class="p-3 rounded-3 mb-3" style="background:#f8faff; border:1px solid #e0e7ff; color:#1e293b;">
+                        <div class="row text-center g-2">
+                            <div class="col-4">
+                                <div class="small" style="color:#475569;">Tích lũy kỳ đầu</div>
+                                <div class="fw-bold @(firstCumulative >= 0 ? "text-success" : "text-danger")">
+                                    @firstCumulative.ToString("N0") ₫
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="small" style="color:#475569;">Xu hướng</div>
+                                <div class="fw-bold @(trend >= 0 ? "text-success" : "text-danger")">
+                                    @(trend >= 0 ? "▲ Tăng" : "▼ Giảm")
+                                    @(Math.Abs(trend).ToString("N0")) ₫
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="small" style="color:#475569;">Tích lũy kỳ cuối</div>
+                                <div class="fw-bold @(lastCumulative >= 0 ? "text-success" : "text-danger")">
+                                    @lastCumulative.ToString("N0") ₫
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="list-unstyled mb-0" style="font-size:.93rem; line-height:1.9;">
+                        @if (trend > 0)
+                        {
+                            <li><i class="fa-solid fa-circle-check text-success me-2"></i>Đường tích lũy <strong>đi lên</strong> — dòng tiền cải thiện theo thời gian.</li>
+                        }
+                        else if (trend < 0)
+                        {
+                            <li><i class="fa-solid fa-circle-xmark text-danger me-2"></i>Đường tích lũy <strong>đi xuống</strong> — dòng tiền đang suy giảm, cần kiểm soát chi phí.</li>
+                        }
+                        else
+                        {
+                            <li><i class="fa-solid fa-minus text-secondary me-2"></i>Đường tích lũy <strong>đi ngang</strong> — dòng tiền ổn định, không tăng trưởng.</li>
+                        }
+                        @if (isAlwaysPositive)
+                        {
+                            <li class="mt-1"><i class="fa-solid fa-shield-halved text-success me-2"></i>Số dư tích lũy <strong>luôn dương</strong> — không có nguy cơ mất thanh khoản.</li>
+                        }
+                        else if (Model.HasDeficit)
+                        {
+                            <li class="mt-1"><i class="fa-solid fa-triangle-exclamation text-danger me-2"></i>Có kỳ tích lũy <strong>xuống dưới 0</strong> — điểm đỏ trên biểu đồ là các kỳ thâm hụt: <strong>Kỳ @string.Join(", ", Model.DeficitPeriods)</strong>.</li>
+                        }
+                        @if (Model.PeriodSummaries.Count >= 3)
+                        {
+                            var slope = (double)(Model.PeriodSummaries.Last().CumulativeBalance - Model.PeriodSummaries.First().CumulativeBalance) / (Model.PeriodSummaries.Count - 1);
+                            <li class="mt-1"><i class="fa-solid fa-ruler text-primary me-2"></i>Tốc độ tích lũy trung bình: <strong>@slope.ToString("N0") ₫/kỳ</strong>.</li>
+                        }
+                    </ul>
+                </div>
+                <div class="col-12">
+                    <div class="alert mb-0 d-flex gap-3 align-items-start
+                        @(Model.Totals.NetTotal >= 0 && !Model.HasDeficit ? "alert-success" : Model.HasDeficit ? "alert-danger" : "alert-warning")">
+                        <i class="fa-solid fa-chart-pie fa-lg mt-1"></i>
+                        <div>
+                            <strong>Tóm tắt đọc biểu đồ:</strong>
+                            @if (Model.Totals.NetTotal >= 0 && !Model.HasDeficit)
+                            {
+                                <span> Cả hai biểu đồ đều phản ánh sức khỏe tài chính <strong>tốt</strong> — cột chồng cho thấy cơ cấu thu chi cân bằng, đường tích lũy đi lên đều. Tiếp tục duy trì và tối ưu dòng tiền đầu tư.</span>
+                            }
+                            else if (Model.HasDeficit && Model.Totals.NetTotal < 0)
+                            {
+                                <span> Biểu đồ cảnh báo <strong>áp lực tài chính cao</strong> — có kỳ thâm hụt và dòng tiền thuần tổng âm. Ưu tiên cắt giảm chi phí và tìm nguồn thu bổ sung ngay.</span>
+                            }
+                            else if (Model.HasDeficit)
+                            {
+                                <span> Dòng tiền thuần tổng dương nhưng có <strong>@Model.DeficitPeriods.Count kỳ thâm hụt</strong> cục bộ — cần lập kế hoạch thanh khoản cho các kỳ yếu (@string.Join(", ", Model.DeficitPeriods.Select(p => $"Kỳ {p}"))).</span>
+                            }
+                            else
+                            {
+                                <span> Dòng tiền tổng âm nhưng chưa có kỳ thâm hụt — có thể do đầu tư ban đầu lớn. Theo dõi sát để đảm bảo dòng tiền phục hồi trong các kỳ tiếp theo.</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Định giá + NPV/IRR ──  -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-dark text-white p-4">
+            <h4 class="mb-0">Định giá dòng tiền theo lãi suất</h4>
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-3 text-center mb-3">
+                <div class="col-6 col-md-2">
+                    <div class="border rounded-3 p-3 h-100 metric-card">
+                        <div class="metric-label">Vốn ban đầu</div>
+                        <div class="metric-value fw-bold">@Model.InitialInvestmentFormatted</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-2">
+                    <div class="border rounded-3 p-3 h-100 metric-card">
+                        <div class="metric-label">Lãi suất chiết khấu</div>
+                        <div class="metric-value fw-bold">@Model.DiscountRateFormatted</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-2">
+                    <div class="border rounded-3 p-3 h-100 metric-card">
+                        <div class="metric-label">PV dòng tiền</div>
+                        <div class="metric-value fw-bold">@Model.PresentValueFormatted</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-2">
+                    <div class="border rounded-3 p-3 h-100 metric-card">
+                        <div class="metric-label">FV dòng tiền</div>
+                        <div class="metric-value fw-bold">@Model.FutureValueFormatted</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-2">
+                    <div class="border rounded-3 p-3 h-100 metric-card">
+                        <div class="metric-label">NPV (Giá trị hiện tại thuần)</div>
+                        <div class="metric-value fw-bold @(Model.NPV >= 0 ? "text-success" : "text-danger")">@Model.NPVFormatted</div>
+                        <span class="badge @(Model.NPV >= 0 ? "bg-success" : "bg-danger") mt-1" style="font-size:.65rem;">
+                            @(Model.NPV >= 0 ? "✓ Dương" : "✗ Âm")
+                        </span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-2">
+                    <div class="border rounded-3 p-3 h-100 metric-card">
+                        <div class="metric-label">IRR (Tỷ suất hoàn vốn nội bộ)</div>
+                        <div class="metric-value fw-bold @(Model.IRR > Model.DiscountRate ? "text-success" : "text-warning")">@Model.IRRFormatted</div>
+                        <span class="badge @(Model.IRR > Model.DiscountRate ? "bg-success" : "bg-warning text-dark") mt-1" style="font-size:.65rem;">
+                            @(Model.IRR > Model.DiscountRate ? "IRR > r" : "IRR ≤ r")
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            @if (Model.PresentValue != 0)
+            {
+                var npvRatio = (double)(Model.NPV / Math.Abs(Model.PresentValue)) * 100;
+                var npvPct = Math.Min(Math.Max(npvRatio, -100), 100);
+                var barColor = npvPct >= 0 ? "bg-success" : "bg-danger";
+                var barWidth = Math.Abs(npvPct);
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between small text-muted mb-1">
+                        <span>NPV / |PV| ratio</span>
+                        <span>@npvPct.ToString("F1")%</span>
+                    </div>
+                    <div class="progress" style="height:10px;">
+                        <div class="progress-bar @barColor" role="progressbar"
+                             style="width: @barWidth.ToString("F0")%"
+                             aria-valuenow="@barWidth" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+            }
+
+            <div class="alert @(Model.NPV >= 0 && !Model.HasDeficit ? "alert-success" : "alert-warning") mb-0 d-flex gap-2 align-items-start">
+                <i class="fa-solid fa-lightbulb mt-1"></i>
+                <div><strong>Khuyến nghị:</strong> @Model.Decision</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Bảng chi tiết từng kỳ (đã sửa badge số kỳ) ──  -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-dark text-white p-4 d-flex align-items-center justify-content-between">
+            <h4 class="mb-0">Chi tiết từng kỳ</h4>
+            <!-- Badge số kỳ: to hơn, màu tím -->
+            <span class="badge bg-purple">@Model.PeriodSummaries.Count kỳ</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive finance-table-wrap">
+                <table class="table table-bordered table-sm cashflow-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Kỳ</th>
+                            <th class="text-end">Kinh doanh</th>
+                            <th class="text-end">Đầu tư</th>
+                            <th class="text-end">Tài chính</th>
+                            <th class="text-end">Dòng tiền thuần</th>
+                            <th class="text-end">Tích lũy</th>
+                            <th class="text-center">Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in Model.PeriodSummaries)
+                        {
+                            <tr>
+                                <td><strong>Kỳ @row.Period</strong></td>
+                                <td class="text-end @(row.OperatingCF >= 0 ? "" : "text-danger")">@row.OperatingCF.ToString("N0")</td>
+                                <td class="text-end @(row.InvestingCF >= 0 ? "" : "text-danger")">@row.InvestingCF.ToString("N0")</td>
+                                <td class="text-end @(row.FinancingCF >= 0 ? "" : "text-danger")">@row.FinancingCF.ToString("N0")</td>
+                                <td class="text-end @(row.NetCashFlow >= 0 ? "text-success" : "text-danger") fw-bold">
+                                    @row.NetCashFlow.ToString("N0")
+                                </td>
+                                <td class="text-end @(row.CumulativeBalance >= 0 ? "text-success" : "text-danger") fw-bold">
+                                    @row.CumulativeBalance.ToString("N0")
+                                </td>
+                                <td class="text-center">
+                                    @if (row.IsDeficit)
+                                    {
+                                        <span class="badge bg-danger">🔴 Thâm hụt</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">🟢 Dương</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td class="cf-total-cell">Tổng</td>
+                            <td class="text-end cf-total-cell @(Model.Totals.TotalOperating >= 0 ? "" : "text-danger")">@Model.Totals.TotalOperating.ToString("N0")</td>
+                            <td class="text-end cf-total-cell @(Model.Totals.TotalInvesting >= 0 ? "" : "text-danger")">@Model.Totals.TotalInvesting.ToString("N0")</td>
+                            <td class="text-end cf-total-cell @(Model.Totals.TotalFinancing >= 0 ? "" : "text-danger")">@Model.Totals.TotalFinancing.ToString("N0")</td>
+                            <td class="text-end cf-total-cell @(Model.Totals.NetTotal >= 0 ? "text-success" : "text-danger")">@Model.Totals.NetTotal.ToString("N0")</td>
+                            <td colspan="2" class="cf-total-cell"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script>
+        (function () {
+        const labels = [@Html.Raw(Model.ChartLabels)];
+        const operating = [@Html.Raw(Model.OperatingData)];
+        const investing = [@Html.Raw(Model.InvestingData)];
+        const financing = [@Html.Raw(Model.FinancingData)];
+        const cumulative = [@Html.Raw(Model.CumulativeData)];
+
+        function fmtVND(v) {
+        if (Math.abs(v) >= 1e9) return (v / 1e9).toFixed(1) + ' tỷ';
+        if (Math.abs(v) >= 1e6) return (v / 1e6).toFixed(0) + ' tr';
+        return v.toLocaleString('vi-VN');
+        }
+
+        const ctx1 = document.getElementById('cashFlowStackedChart').getContext('2d');
+        new Chart(ctx1, {
+        type: 'bar',
+        data: {
+        labels,
+        datasets: [
+        { label: 'Kinh doanh', data: operating, backgroundColor: 'rgba(59,130,246,0.75)', borderColor: 'rgba(59,130,246,1)', borderWidth: 1 },
+        // Đầu tư chuyển sang màu tím
+        { label: 'Đầu tư', data: investing, backgroundColor: 'rgba(139,92,246,0.75)', borderColor: 'rgba(139,92,246,1)', borderWidth: 1 },
+        { label: 'Tài chính', data: financing, backgroundColor: 'rgba(234,179,8,0.75)', borderColor: 'rgba(234,179,8,1)', borderWidth: 1 }
+        ]
+        },
+        options: {
+        responsive: true,
+        plugins: {
+        legend: { position: 'top' },
+        tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + fmtVND(ctx.parsed.y) } }
+        },
+        scales: {
+        x: { stacked: true },
+        y: { stacked: true, ticks: { callback: v => fmtVND(v) } }
+        }
+        }
+        });
+
+        const ctx2 = document.getElementById('cumulativeChart').getContext('2d');
+        const cumulativeColors = cumulative.map(v => v >= 0 ? 'rgba(34,197,94,0.7)' : 'rgba(239,68,68,0.7)');
+        new Chart(ctx2, {
+        type: 'line',
+        data: {
+        labels,
+        datasets: [{
+        label: 'Tích lũy',
+        data: cumulative,
+        borderColor: 'rgba(99,102,241,1)',
+        backgroundColor: 'rgba(99,102,241,0.1)',
+        pointBackgroundColor: cumulativeColors,
+        pointBorderColor: cumulativeColors,
+        pointRadius: 5,
+        fill: true,
+        tension: 0.35
+        }]
+        },
+        options: {
+        responsive: true,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => 'Tích lũy: ' + fmtVND(ctx.parsed.y) } } },
+        scales: { y: { ticks: { callback: v => fmtVND(v) }, grid: { color: 'rgba(0,0,0,0.05)' } } }
+        }
+        });
+        })();
+
+        // Tfoot theme
+        function applyTfootTheme() {
+        const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark'
+        || window.matchMedia('(prefers-color-scheme: dark)').matches;
+        // tfoot background is handled by CSS
+        }
+        document.addEventListener('DOMContentLoaded', applyTfootTheme);
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTfootTheme);
+        const observer = new MutationObserver(applyTfootTheme);
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-bs-theme'] });
+    </script>
+}

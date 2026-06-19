@@ -1,0 +1,83 @@
+@model FinanceSystem.Models.Entities.AppUser
+
+@{
+    ViewData["Title"] = "Thông Tin Cá Nhân";
+}
+
+<div class="container page-shell">
+
+    <section class="tool-intro" style="margin-bottom: 24px;">
+        <div>
+            <span class="eyebrow">Tài khoản của bạn</span>
+            <h1>Hồ sơ người dùng</h1>
+        </div>
+        <aside class="example-box" style="display:flex; flex-direction:column; justify-content:center; gap:12px;">
+            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-primary">
+                <i class="fa-solid fa-house me-1"></i> Về trang chủ
+            </a>
+            <a asp-action="MyHistory" class="btn btn-outline-primary">
+                <i class="fa-solid fa-clock-rotate-left me-1"></i> Lịch sử sử dụng
+            </a>
+        </aside>
+    </section>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white p-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width:48px; height:48px; border-radius:50%; background:rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:700;">
+                            @(Model.Username?.Substring(0, 1).ToUpper() ?? "?")
+                        </div>
+                        <div>
+                            <h4 class="mb-0">@Model.Username</h4>
+                            <small class="opacity-75">@Model.Email</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-4">
+                    <table class="table">
+                        <tr>
+                            <th style="width:140px;color:#374151;font-weight:600;">Tên đăng nhập</th>
+                            <td style="color:#111827;font-weight:600;">@Model.Username</td>
+                        </tr>
+                        <tr>
+                            <th style="color:#374151;font-weight:600;">Email</th>
+                            <td style="color:#111827;">@Model.Email</td>
+                        </tr>
+                        <tr>
+                            <th style="color:#374151;font-weight:600;">Ngày tạo tài khoản</th>
+                            <td style="color:#111827;">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                        </tr>
+                        <tr>
+                            <th style="color:#374151;font-weight:600;">Trạng thái</th>
+                            <td>
+                                @if (Model.IsLocked)
+                                {
+                                    <span class="badge bg-danger">Bị khóa</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">Đang hoạt động</span>
+                                }
+                            </td>
+                        </tr>
+                        <tr>
+                            <th style="color:#374151;font-weight:600;">Vai trò</th>
+                            <td>
+                                @foreach (var role in Model.UserRoles)
+                                {
+                                    // Nếu là Admin thì dùng màu đỏ (bg-danger), ngược lại màu xám (bg-secondary)
+                                    var badgeClass = role.Role?.RoleName == "Admin" ? "bg-danger" : "bg-secondary";
+                                    <span class="badge @badgeClass me-1">@(role.Role?.RoleName)</span>
+                                }
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>

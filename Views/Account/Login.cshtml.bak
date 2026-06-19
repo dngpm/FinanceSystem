@@ -1,0 +1,127 @@
+@{
+    ViewData["Title"] = "Đăng nhập";
+}
+
+<main class="login-screen">
+    <section class="login-hero">
+        <div class="login-brand">
+            <span class="login-badge">
+                <span></span>
+                CASHFLOW PRO
+            </span>
+
+            <h1>
+                Đăng nhập hệ thống
+                <strong>tính toán lãi suất &amp; phân tích dòng tiền</strong>
+            </h1>
+
+            <p>
+                Theo dõi lợi nhuận, quản lý nguồn vốn và xem báo cáo dòng tiền
+                theo thời gian thực trong một giao diện hiện đại, dễ sử dụng.
+            </p>
+        </div>
+
+        <div class="login-feature-grid">
+            <article>
+                <i class="fa-solid fa-check"></i>
+                <h2>Tính lãi nhanh</h2>
+                <p>Ước tính lãi đơn, lãi kép và các kịch bản đầu tư chỉ trong vài giây.</p>
+            </article>
+
+            <article>
+                <i class="fa-solid fa-check"></i>
+                <h2>Phân tích dòng tiền</h2>
+                <p>Xem dòng tiền vào - ra, dự báo thiếu hụt và tối ưu kế hoạch tài chính.</p>
+            </article>
+
+            <article>
+                <i class="fa-solid fa-check"></i>
+                <h2>Báo cáo trực quan</h2>
+                <p>Dashboard rõ ràng với biểu đồ, chỉ số và cảnh báo rủi ro tức thì.</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="login-card" aria-label="Biểu mẫu đăng nhập">
+        <div class="login-card-heading">
+            <span>CHÀO MỪNG TRỞ LẠI</span>
+            <h2>Đăng nhập tài khoản</h2>
+            <p>Truy cập vào công cụ tính lãi suất và phân tích dòng tiền của bạn.</p>
+        </div>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success">
+                @TempData["Success"]
+            </div>
+        }
+
+        <div asp-validation-summary="All" class="login-validation"></div>
+
+        <form asp-action="Login" method="post" class="login-form">
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+
+            <div>
+                <label>Email hoặc tên đăng nhập</label>
+                <input name="username" autocomplete="username" placeholder="ten@congty.com" />
+            </div>
+
+            <div>
+                <label>Mật khẩu</label>
+                <div class="password-field">
+                    <input name="password" id="loginPassword" type="password" autocomplete="current-password" placeholder="••••••••" />
+                    <button type="button" id="togglePassword">Hiện</button>
+                </div>
+            </div>
+
+            <div class="login-options">
+                <label>
+                    <input type="checkbox" checked />
+                    Ghi nhớ đăng nhập
+                </label>
+                <a asp-action="ForgotPassword">Quên mật khẩu?</a>
+            </div>
+
+            <button type="submit" class="login-submit">Đăng nhập</button>
+        </form>
+
+        <!-- Dùng thử không cần tài khoản -->
+        <div class="guest-entry">
+            <div class="guest-entry-icon">
+                <i class="fa-solid fa-user-slash"></i>
+            </div>
+            <div class="guest-entry-body">
+                <span class="guest-entry-label">Dùng thử miễn phí</span>
+                <p>Khám phá các tính năng mà không cần đăng ký tài khoản.</p>
+                <a asp-action="Guest" class="guest-entry-btn">
+                    <i class="fa-solid fa-arrow-right-to-bracket me-1"></i>
+                    Tiếp tục với tư cách khách
+                </a>
+            </div>
+        </div>
+
+        <div class="login-register">
+            <span>Chưa có tài khoản?</span>
+            <a asp-action="Register">Đăng ký tại đây</a>
+        </div>
+    </section>
+</main>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const passwordInput = document.getElementById("loginPassword");
+            const toggleButton = document.getElementById("togglePassword");
+
+            if (!passwordInput || !toggleButton) return;
+
+            toggleButton.addEventListener("click", function () {
+                const isHidden = passwordInput.type === "password";
+                passwordInput.type = isHidden ? "text" : "password";
+                toggleButton.textContent = isHidden ? "Ẩn" : "Hiện";
+            });
+        });
+    </script>
+}

@@ -1,0 +1,85 @@
+@model FinanceSystem.Models.Entities.InterestRateTable
+
+@{
+    ViewData["Title"] = "Thêm Kỳ Hạn Mới";
+}
+
+<div class="container page-shell">
+
+    <section class="tool-intro" style="margin-bottom: 24px;">
+        <div>
+            <span class="eyebrow">Biểu lãi suất</span>
+            <h1><i class="fa-solid fa-plus me-2"></i>Thêm Kỳ Hạn Mới</h1>
+            <p>Bổ sung một kỳ hạn tiết kiệm hoặc vay chưa có trong biểu.</p>
+        </div>
+        <aside class="example-box" style="display:flex;flex-direction:column;gap:10px;">
+            <a asp-action="InterestRates" class="btn btn-outline-secondary btn-sm">
+                <i class="fa-solid fa-arrow-left me-1"></i> Quay lại biểu lãi suất
+            </a>
+        </aside>
+    </section>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-dark text-white p-4">
+                    <h5 class="mb-0"><i class="fa-solid fa-plus-circle me-2"></i>Thông tin kỳ hạn</h5>
+                </div>
+                <div class="card-body p-4">
+
+                    <div asp-validation-summary="All" class="alert alert-danger mb-4"></div>
+
+                    <form asp-action="AddRate" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Loại lãi suất <span class="text-danger">*</span></label>
+                            <select name="RateType" class="form-select" required>
+                                <option value="">-- Chọn loại --</option>
+                                <option value="Savings">Tiết kiệm</option>
+                                <option value="Loan">Cho vay</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Nhãn kỳ hạn <span class="text-danger">*</span></label>
+                            <input type="text" name="TermLabel" class="form-control"
+                                   placeholder="VD: 48 tháng" maxlength="50" required />
+                            <div class="form-text">Tên hiển thị trên bảng lãi suất.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Số tháng chuẩn <span class="text-danger">*</span></label>
+                            <input type="number" name="TermMonths" class="form-control"
+                                   placeholder="VD: 48" min="1" required />
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Lãi suất (%/năm) <span class="text-danger">*</span></label>
+                            <div class="input-group input-group-lg">
+                                <input type="number" name="AnnualRatePercent" class="form-control"
+                                       step="0.01" min="0" max="100" placeholder="VD: 5.5" required />
+                                <span class="input-group-text">%/năm</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Ghi chú</label>
+                            <input type="text" name="Note" class="form-control"
+                                   placeholder="VD: Khóa hạn, Ưu đãi..." maxlength="200" />
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-warning flex-fill">
+                                <i class="fa-solid fa-plus me-1"></i> Thêm kỳ hạn
+                            </button>
+                            <a asp-action="InterestRates" class="btn btn-outline-secondary">Hủy</a>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>

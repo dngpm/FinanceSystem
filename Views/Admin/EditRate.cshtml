@@ -1,0 +1,96 @@
+@model FinanceSystem.Models.Entities.InterestRateTable
+
+@{
+    ViewData["Title"] = "Sửa Lãi Suất";
+    var typeLabel = Model.RateType == "Savings" ? "Tiết kiệm" : "Cho vay";
+    var typeColor = Model.RateType == "Savings" ? "success" : "danger";
+}
+
+<div class="container page-shell">
+
+    <section class="tool-intro" style="margin-bottom: 24px;">
+        <div>
+            <span class="eyebrow">Biểu lãi suất — @typeLabel</span>
+            <h1><i class="fa-solid fa-pen-to-square me-2"></i>Sửa Lãi Suất</h1>
+            <p>Cập nhật lãi suất cho kỳ hạn <strong>«@Model.TermLabel»</strong>.</p>
+        </div>
+        <aside class="example-box" style="display:flex;flex-direction:column;gap:10px;">
+            <a asp-action="InterestRates" class="btn btn-outline-secondary btn-sm">
+                <i class="fa-solid fa-arrow-left me-1"></i> Quay lại biểu lãi suất
+            </a>
+        </aside>
+    </section>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-dark text-white p-4">
+                    <h5 class="mb-0">
+                        <span class="badge bg-@typeColor me-2">@typeLabel</span>
+                        @Model.TermLabel
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+
+                    <div asp-validation-summary="All" class="alert alert-danger mb-4"></div>
+
+                    <!-- Thông tin chỉ đọc -->
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Kỳ hạn</label>
+                        <input class="form-control" value="@Model.TermLabel" disabled />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Số tháng chuẩn</label>
+                        <input class="form-control" value="@Model.TermMonths tháng" disabled />
+                    </div>
+
+                    <form asp-action="EditRate" asp-route-id="@Model.Id" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">
+                                Lãi suất mới (%/năm)
+                                <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group input-group-lg">
+                                <input type="number"
+                                       name="annualRatePercent"
+                                       value="@Model.AnnualRatePercent"
+                                       class="form-control"
+                                       step="0.01" min="0" max="100"
+                                       placeholder="VD: 5.5" required />
+                                <span class="input-group-text">%/năm</span>
+                            </div>
+                            <div class="form-text">Nhập số thực, ví dụ 5.2 là 5.2%/năm.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Ghi chú</label>
+                            <input type="text"
+                                   name="note"
+                                   value="@Model.Note"
+                                   class="form-control"
+                                   placeholder="VD: Khóa hạn, Ưu đãi mới, Ngắn hạn..."
+                                   maxlength="200" />
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-@typeColor flex-fill">
+                                <i class="fa-solid fa-floppy-disk me-1"></i> Lưu thay đổi
+                            </button>
+                            <a asp-action="InterestRates" class="btn btn-outline-secondary">Hủy</a>
+                        </div>
+                    </form>
+
+                </div>
+                <div class="card-footer bg-transparent border-0 px-4 pb-3">
+                    <small class="text-muted">
+                        <i class="fa-solid fa-clock me-1"></i>
+                        Cập nhật lần cuối: @Model.UpdatedAt.ToString("dd/MM/yyyy HH:mm") bởi @Model.UpdatedBy
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>

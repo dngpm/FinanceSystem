@@ -1,0 +1,83 @@
+@using FinanceSystem.Models.Entities
+@{
+    ViewData["Title"] = "Công cụ tính toán";
+    var rates = ViewBag.Rates as List<InterestRateTable> ?? new();
+    var loanRates = rates.Where(r => r.RateType == InterestRateType.Loan).ToList();
+    var savingRates = rates.Where(r => r.RateType == InterestRateType.Savings).ToList();
+}
+
+<div class="container page-shell">
+    <section class="tool-intro">
+        <div>
+            <span class="eyebrow">Công cụ tham khảo</span>
+            <h1>Công cụ tính lãi vay và lãi tiết kiệm</h1>
+            <p>Chọn loại tính toán phù hợp. Đây là khu vực dành cho cả khách vãng lai, chỉ dùng để ước tính và so sánh.</p>
+        </div>
+        <aside class="example-box">
+            <h2>Dịch vụ thật</h2>
+            <p>Nếu muốn gửi yêu cầu vay vốn hoặc gửi tiết kiệm, hãy vào mục Dịch vụ tài chính.</p>
+            <a asp-controller="Services" asp-action="Index" class="btn btn-outline-primary btn-sm">Xem dịch vụ</a>
+        </aside>
+    </section>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-dark text-white p-4">
+                    <h2 class="mb-1"><i class="fa-solid fa-calculator me-2"></i>Tính lãi vay</h2>
+                    <p class="mb-0 opacity-75">Dùng cho vay tín chấp hoặc vay trả góp.</p>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3 mb-4">
+                        @foreach (var rate in loanRates)
+                        {
+                            <div class="col-md-4">
+                                <div class="p-3 rounded border h-100">
+                                    <strong>@rate.TermLabel</strong>
+                                    <div class="fs-5 fw-bold text-danger">@rate.AnnualRatePercent.ToString("N2")%</div>
+                                    <small class="text-muted">@rate.Note</small>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <a asp-controller="Loan" asp-action="Index" class="btn btn-dark w-100">
+                        <i class="fa-solid fa-arrow-right me-1"></i>Mở công cụ tính khoản vay
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-dark text-white p-4">
+                    <h2 class="mb-1"><i class="fa-solid fa-piggy-bank me-2"></i>Tính lãi tiết kiệm</h2>
+                    <p class="mb-0 opacity-75">Ước tính lãi nhận cuối kỳ, định kỳ, lãi kép và rút trước hạn.</p>
+                </div>
+                <div class="card-body p-4">
+                    <div class="table-responsive mb-4">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Kỳ hạn</th>
+                                    <th>Lãi suất</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var rate in savingRates.Take(6))
+                                {
+                                    <tr>
+                                        <td>@rate.TermLabel</td>
+                                        <td><strong class="text-success">@rate.AnnualRatePercent.ToString("N2")%</strong></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <a asp-controller="Savings" asp-action="Index" class="btn btn-dark w-100">
+                        <i class="fa-solid fa-arrow-right me-1"></i>Mở công cụ tính tiết kiệm
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

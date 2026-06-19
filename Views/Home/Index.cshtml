@@ -1,0 +1,79 @@
+@{
+    ViewData["Title"] = "Trang chủ";
+}
+
+
+<section class="welcome-panel">
+    <div>
+        <span class="eyebrow" style="font-size: 1.5rem;">Hệ thống tính toán lãi suất và phân tích dòng tiền</span>
+        <h1>Công cụ tính toán để đưa ra quyết định vay, tiết kiệm hay đầu tư</h1>
+        <p>
+            Trang web hỗ trợ tính lãi vay vốn, tính lãi tiết kiệm và phân tích dòng tiền theo lãi suất.
+            Phần CashFlow đã gồm NPV, IRR, giá trị hiện tại và giá trị tương lai của dòng tiền.
+        </p>
+    </div>
+    <div class="quick-start-box">
+        @if (User.IsInRole("Admin"))
+        {
+            <h2>Vai trò Admin</h2>
+            <ol>
+                <li>Cập nhật biểu lãi suất tiền gửi và lãi suất vay.</li>
+                <li>Xem danh sách, khóa hoặc mở khóa tài khoản người dùng.</li>
+                <li>Theo dõi tổng tiền gửi tiết kiệm, tổng dư nợ cho vay và yêu cầu dịch vụ.</li>
+            </ol>
+        }
+        else
+        {
+            <h2>Bắt đầu nhanh</h2>
+            <ol>
+                <li>Dùng <strong>Tính lãi vay</strong> để xem lịch trả nợ và tổng chi phí khoản vay.</li>
+                <li>Dùng <strong>Tính lãi tiết kiệm</strong> để ước tính lãi cuối kỳ hoặc lãi hàng tháng.</li>
+                <li>Dùng <strong>CashFlow NPV/IRR</strong> để phân tích dòng tiền và đánh giá phương án đầu tư.</li>
+            </ol>
+        }
+    </div>
+</section>
+
+<section class="scenario-grid" aria-label="Các công cụ chính">
+    <a class="scenario-card accent-blue" asp-controller="Loan" asp-action="Index">
+        <i class="fa-solid fa-house-chimney"></i>
+        <span>Tôi muốn vay vốn</span>
+        <strong>Tính lãi vay</strong>
+        <p>Tính lịch trả nợ, tổng lãi, dòng tiền trả nợ và chi phí khoản vay.</p>
+    </a>
+
+    <a class="scenario-card accent-green" asp-controller="Savings" asp-action="Index">
+        <i class="fa-solid fa-piggy-bank"></i>
+        <span>Tôi muốn gửi tiết kiệm</span>
+        <strong>Tính lãi tiết kiệm</strong>
+        <p>Ước tính lãi cuối kỳ, lãi định kỳ, lãi kép và kết quả khi rút trước hạn.</p>
+    </a>
+
+    <a class="scenario-card accent-teal" asp-controller="CashFlow" asp-action="Index">
+        <i class="fa-solid fa-wallet"></i>
+        <span>Tôi cần đánh giá dòng tiền</span>
+        <strong>CashFlow NPV/IRR</strong>
+        <p>Nhập thu chi theo kỳ để tính PV, FV, NPV, IRR và nhận khuyến nghị vay, tiết kiệm hoặc đầu tư.</p>
+    </a>
+</section>
+
+<section class="glossary-panel">
+    <div>
+        <h2>Các chỉ số quan trọng</h2>
+        <p>Những chỉ số này được dùng trong kết quả tính toán và phân tích dòng tiền.</p>
+    </div>
+    <div class="glossary-list">
+        <div>
+            <strong>NPV</strong>
+            <p>Giá trị hiện tại thuần. NPV dương cho thấy dòng tiền tạo thêm giá trị sau khi tính lãi suất chiết khấu.</p>
+        </div>
+        <div>
+            <strong>IRR</strong>
+            <p>Tỷ suất hoàn vốn nội bộ. Nếu IRR cao hơn lãi suất yêu cầu, phương án đầu tư thường hấp dẫn hơn.</p>
+        </div>
+        <div>
+            <strong>PV và FV</strong>
+            <p>PV quy đổi dòng tiền về hiện tại, FV quy đổi dòng tiền về tương lai theo lãi suất đã nhập.</p>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,146 @@
+@model FinanceSystem.Models.ViewModels.LoanResultViewModel
+
+@{
+    ViewData["Title"] = "Kết Quả Khoản Vay";
+}
+
+<style>
+    .btn-recalc {
+        background-color: #f1f5f9;
+        color: #1e293b;
+        border: 1.5px solid #94a3b8;
+        font-weight: 600;
+        transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+    }
+    .btn-recalc:hover {
+        background-color: #e2e8f0;
+        color: #0f172a;
+        border-color: #64748b;
+    }
+    [data-bs-theme="dark"] .btn-recalc {
+        background-color: #334155;
+        color: #f1f5f9;
+        border: 1.5px solid #94a3b8;
+    }
+    [data-bs-theme="dark"] .btn-recalc:hover {
+        background-color: #475569;
+        color: #ffffff;
+        border-color: #cbd5e1;
+    }
+</style>
+
+<div class="container mt-5">
+
+    <div class="card shadow-lg border-0 rounded-4">
+
+        <div class="card-header bg-success text-white p-4">
+            <h2>Kết Quả Phân Tích Khoản Vay</h2>
+        </div>
+
+        <div class="card-body p-5">
+
+            <div class="row text-center mb-5">
+
+                <div class="col-md-3 mb-4">
+                    <div class="card border-0 shadow-sm p-4">
+                        <h5>Số Tiền Vay</h5>
+                        <h3 class="text-primary">
+                            @Model.TotalPrincipalFormatted
+                        </h3>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-4">
+                    <div class="card border-0 shadow-sm p-4">
+                        <h5>Tổng Tiền Lãi</h5>
+                        <h3 class="text-danger">
+                            @Model.TotalInterestFormatted
+                        </h3>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-4">
+                    <div class="card border-0 shadow-sm p-4">
+                        <h5>Tổng Tiền Phải Trả</h5>
+                        <h3 class="text-success">
+                            @Model.TotalPaymentFormatted
+                        </h3>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-4">
+                    <div class="card border-0 shadow-sm p-4">
+                        <h5>Lãi Suất Thực Tế (EIR)</h5>
+                        <h3 class="text-warning">
+                            @Model.EIRFormatted
+                        </h3>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <p><strong>Lãi suất/năm:</strong>
+                        @FinanceSystem.Models.Services.FinancialHelper.FormatPercent(Model.InputLoan.AnnualInterestRate)
+                    </p>
+                    <p><strong>Lãi suất/@Model.UnitLabel:</strong> @Model.PeriodRateFormatted</p>
+                    <p><strong>Kỳ hạn:</strong> @Model.InputLoan.TermCount @Model.UnitLabel</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Phương thức:</strong> @Model.MethodDisplayName</p>
+                    <p><strong>Tổng số kỳ:</strong> @Model.TotalPeriods</p>
+                    @if (Model.HasEarlyRepayment)
+                    {
+                        <p class="text-warning"><strong>⚠ @Model.EarlyRepaymentNote</strong></p>
+                    }
+                </div>
+            </div>
+
+            <h4 class="mb-3">Lịch Trả Nợ</h4>
+
+            <div class="table-responsive finance-table-wrap">
+                <table class="finance-table">
+                    <thead>
+                        <tr>
+                            <th>@Model.PeriodColumnHeader</th>
+                            <th>Dư Nợ Đầu Kỳ</th>
+                            <th>Gốc Trả</th>
+                            <th>Lãi Trả</th>
+                            <th>Tổng Trả</th>
+                            <th>Dư Nợ Cuối Kỳ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in Model.Schedule)
+                        {
+                            <tr class="@(row.IsEarlyRepayment ? "table-warning" : "")">
+                                <td>@row.PeriodLabel</td>
+                                <td>@row.OpeningBalance.ToString("N0")</td>
+                                <td>@row.PrincipalPayment.ToString("N0")</td>
+                                <td>@row.InterestPayment.ToString("N0")</td>
+                                <td><strong>@row.TotalPayment.ToString("N0")</strong></td>
+                                <td>@row.ClosingBalance.ToString("N0")</td>
+                            </tr>
+                            @if (row.EarlyRepaymentPenalty > 0)
+                            {
+                                <tr style="background: rgba(220,38,38,0.12);">
+                                    <td colspan="6" class="val-negative" style="font-size:0.88rem">
+                                        Phí phạt tất toán: @row.EarlyRepaymentPenalty.ToString("N0") ₫
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-4">
+                <a asp-action="Index" class="btn btn-recalc">← Tính Lại</a>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

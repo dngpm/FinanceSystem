@@ -1,0 +1,496 @@
+@using FinanceSystem.Models.Entities
+
+@{
+    ViewData["Title"] = "Lịch Sử Sử Dụng";
+    string tab          = ViewBag.Tab ?? "loan";
+    int loanCount       = ViewBag.LoanCount;
+    int savingsCount    = ViewBag.SavingsCount;
+    int cashFlowCount   = ViewBag.CashFlowCount;
+    int totalCount      = ViewBag.TotalCount;
+    DateTime? lastSeen  = ViewBag.LastSeen;
+
+    var loans     = (ViewBag.Loans     as List<LoanInfo>)        ?? new();
+    var savings   = (ViewBag.Savings   as List<SavingsInfo>)     ?? new();
+    var cashFlows = (ViewBag.CashFlows as List<CashFlowHistory>) ?? new();
+
+    string TimeAgo(DateTime dt)
+    {
+        var diff = DateTime.Now - dt;
+        if (diff.TotalMinutes < 1)  return "vừa xong";
+        if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes} phút trước";
+        if (diff.TotalHours   < 24) return $"{(int)diff.TotalHours} giờ trước";
+        if (diff.TotalDays    < 7)  return $"{(int)diff.TotalDays} ngày trước";
+        return dt.ToString("dd/MM/yyyy");
+    }
+
+    string MethodLabel(RepaymentMethod m) => m switch
+    {
+        RepaymentMethod.PrincipalEqual            => "Gốc đều",
+        RepaymentMethod.AnnuityEqual              => "Gốc + lãi đều",
+        RepaymentMethod.InterestOnlyThenPrincipal => "Lãi trước gốc sau",
+        _ => m.ToString()
+    };
+
+    string PaymentTypeLabel(InterestPaymentType t) => t switch
+    {
+        InterestPaymentType.EndOfTerm  => "Cuối kỳ",
+        InterestPaymentType.Monthly    => "Hàng tháng",
+        InterestPaymentType.Quarterly  => "Hàng quý",
+        InterestPaymentType.Compound   => "Lãi kép",
+        _ => t.ToString()
+    };
+}
+
+<style>
+    /* ── CSS variables (light / dark) ─────────────────────────── */
+    :root {
+        --mh-text-primary:    #0f172a;
+        --mh-text-secondary:  #475569;
+        --mh-text-body:       #1e293b;
+        --mh-card-bg:         #ffffff;
+        --mh-table-bg:        #ffffff;
+        --mh-table-head-bg:   #1e293b;
+        --mh-table-head-fg:   #f1f5f9;
+        --mh-table-row-hover: #eff6ff;
+        --mh-table-border:    #94a3b8;
+        --mh-tab-bg:          #ffffff;
+        --mh-tab-fg:          #000000;
+        --mh-tab-border:      #dee2e6;
+        --mh-tab-active-border: #334155;
+        --mh-wrap-bg:         #ffffff;
+        --mh-wrap-border:     #334155;
+    }
+
+    [data-bs-theme="dark"] {
+        --mh-text-primary:    #f1f5f9;
+        --mh-text-secondary:  #94a3b8;
+        --mh-text-body:       #cbd5e1;
+        --mh-card-bg:         #1e293b;
+        --mh-table-bg:        #1e293b;
+        --mh-table-head-bg:   #0f172a;
+        --mh-table-head-fg:   #94a3b8;
+        --mh-table-row-hover: #263348;
+        --mh-table-border:    #334155;
+        --mh-tab-bg:          #1e293b;
+        --mh-tab-fg:          #f1f5f9;
+        --mh-tab-border:      #475569;
+        --mh-tab-active-border: #94a3b8;
+        --mh-wrap-bg:         #1e293b;
+        --mh-wrap-border:     #475569;
+    }
+
+    /* ── Tabs ─────────────────────────────────────────────────── */
+    .nav-tabs { border-bottom: none !important; }
+
+    .nav-tabs .nav-link {
+        background-color: var(--mh-tab-bg) !important;
+        color: var(--mh-tab-fg) !important;
+        border: 1px solid var(--mh-tab-border) !important;
+        border-bottom: none !important;
+        font-weight: 600 !important;
+        padding: 8px 16px !important;
+        border-radius: 6px 6px 0 0 !important;
+        margin-right: 4px;
+        opacity: 1 !important;
+        transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .nav-tabs .nav-link.active {
+        background-color: var(--mh-tab-bg) !important;
+        color: var(--mh-tab-fg) !important;
+        border: 1px solid var(--mh-tab-active-border) !important;
+        border-bottom: 2px solid var(--mh-tab-bg) !important;
+        z-index: 2;
+    }
+
+    .nav-tabs .nav-link:hover {
+        background-color: var(--mh-tab-bg) !important;
+        color: var(--mh-tab-fg) !important;
+        opacity: 0.85 !important;
+    }
+
+    .nav-tabs .nav-link .badge {
+        background-color: #6c757d !important;
+        color: #ffffff !important;
+    }
+
+    /* ── Stat cards ───────────────────────────────────────────── */
+    .mh-stat-card              { background-color: var(--mh-card-bg) !important; box-shadow: 0 2px 8px rgba(0,0,0,0.12) !important; }
+    .mh-stat-card .stat-label  { color: var(--mh-text-secondary) !important; font-weight: 500; }
+    .mh-stat-card .stat-value  { color: var(--mh-text-primary) !important; }
+    .mh-stat-card .stat-unit   { color: var(--mh-text-secondary) !important; }
+
+    /* ── Table wrapper ────────────────────────────────────────── */
+    .mh-table-card {
+        background-color: var(--mh-wrap-bg) !important;
+        border: 1px solid var(--mh-wrap-border) !important;
+        border-top: 2px solid var(--mh-wrap-border) !important;
+        border-radius: 0 8px 8px 8px !important;
+        overflow: hidden;
+        margin-top: -1px !important;
+    }
+
+    /* ── Table ────────────────────────────────────────────────── */
+    table.mh-table,
+    table.mh-table > tbody,
+    table.mh-table > thead {
+        background-color: var(--mh-table-bg) !important;
+        color: var(--mh-text-body) !important;
+    }
+
+    table.mh-table > thead > tr > th {
+        background-color: var(--mh-table-head-bg) !important;
+        color: var(--mh-table-head-fg) !important;
+        border-bottom: none !important;
+        border-top: none !important;
+        padding-top: 13px !important;
+        padding-bottom: 13px !important;
+        font-size: 13px !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.04em !important;
+    }
+
+    table.mh-table > tbody > tr {
+        background-color: var(--mh-table-bg) !important;
+        border-bottom: 1px solid var(--mh-table-border) !important;
+    }
+    table.mh-table > tbody > tr:hover {
+        background-color: var(--mh-table-row-hover) !important;
+    }
+    table.mh-table > tbody > tr > td {
+        border-color: var(--mh-table-border) !important;
+        vertical-align: middle !important;
+    }
+
+    /* ── Text helpers ─────────────────────────────────────────── */
+    .mh-text-primary   { color: var(--mh-text-primary)   !important; }
+    .mh-text-secondary { color: var(--mh-text-secondary) !important; }
+    .mh-text-body      { color: var(--mh-text-body)      !important; }
+</style>
+
+<div class="container page-shell">
+
+    <section class="tool-intro" style="margin-bottom:24px;">
+        <div>
+            <span class="eyebrow">Tài khoản của bạn</span>
+            <h1><i class="fa-solid fa-clock-rotate-left me-2"></i>Lịch Sử Sử Dụng</h1>
+            <p>Tổng hợp các phép tính đã thực hiện — xem lại thông số và kết quả chi tiết.</p>
+        </div>
+        <aside class="example-box" style="display:flex;flex-direction:column;gap:10px;">
+            <a asp-action="Profile" class="btn btn-outline-primary btn-sm">
+                <i class="fa-solid fa-user me-1"></i> Hồ sơ của tôi
+            </a>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-primary btn-sm">
+                <i class="fa-solid fa-house me-1"></i> Về trang chủ
+            </a>
+        </aside>
+    </section>
+
+    @* Thống kê tổng quan *@
+    <div class="row g-3 mb-4">
+        <div class="col-sm-3">
+            <div class="card border-0 shadow-sm h-100 mh-stat-card" style="border-left:4px solid #6366f1 !important;">
+                <div class="card-body">
+                    <p class="small mb-1 stat-label">Tổng phép tính đã lưu</p>
+                    <h4 class="fw-bold mb-0 stat-value">@totalCount</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-3">
+            <div class="card border-0 shadow-sm h-100 mh-stat-card" style="border-left:4px solid #ef4444 !important;">
+                <div class="card-body">
+                    <p class="small mb-1 stat-label"><i class="fa-solid fa-hand-holding-dollar me-1" style="color:#ef4444;"></i>Tính khoản vay</p>
+                    <h4 class="fw-bold mb-0 stat-value">@loanCount <small class="fs-6 fw-normal stat-unit">lần</small></h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-3">
+            <div class="card border-0 shadow-sm h-100 mh-stat-card" style="border-left:4px solid #10b981 !important;">
+                <div class="card-body">
+                    <p class="small mb-1 stat-label"><i class="fa-solid fa-piggy-bank me-1" style="color:#10b981;"></i>Tính tiết kiệm</p>
+                    <h4 class="fw-bold mb-0 stat-value">@savingsCount <small class="fs-6 fw-normal stat-unit">lần</small></h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-3">
+            <div class="card border-0 shadow-sm h-100 mh-stat-card" style="border-left:4px solid #3b82f6 !important;">
+                <div class="card-body">
+                    <p class="small mb-1 stat-label"><i class="fa-solid fa-chart-line me-1" style="color:#3b82f6;"></i>Phân tích dòng tiền</p>
+                    <h4 class="fw-bold mb-0 stat-value">@cashFlowCount <small class="fs-6 fw-normal stat-unit">lần</small></h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Tabs *@
+    <ul class="nav nav-tabs mb-0">
+        <li class="nav-item">
+            <a class="nav-link @(tab == "loan" ? "active" : "")"
+               asp-action="MyHistory" asp-route-tab="loan">
+                <i class="fa-solid fa-hand-holding-dollar me-1" style="color:#ef4444;"></i>
+                Khoản vay <span class="badge ms-1">@loanCount</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(tab == "savings" ? "active" : "")"
+               asp-action="MyHistory" asp-route-tab="savings">
+                <i class="fa-solid fa-piggy-bank me-1" style="color:#10b981;"></i>
+                Tiết kiệm <span class="badge ms-1">@savingsCount</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(tab == "cashflow" ? "active" : "")"
+               asp-action="MyHistory" asp-route-tab="cashflow">
+                <i class="fa-solid fa-chart-line me-1" style="color:#3b82f6;"></i>
+                Dòng tiền <span class="badge ms-1">@cashFlowCount</span>
+            </a>
+        </li>
+    </ul>
+
+    @* Tab: Khoản vay *@
+    @if (tab == "loan")
+    {
+        <div class="card border-0 shadow-sm mh-table-card" style="border-top-left-radius:0;">
+            <div class="card-body p-0">
+                @if (!loans.Any())
+                {
+                    <div class="text-center py-5 mh-text-secondary">
+                        <i class="fa-solid fa-inbox fa-2x d-block mb-2 opacity-25"></i>
+                        Chưa có phép tính khoản vay nào được lưu.
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive finance-table-wrap">
+                        <table class="table table-hover mb-0 mh-table">
+                            <thead>
+                                <tr>
+                                    <th class="ps-3" style="width:130px;">Thời gian</th>
+                                    <th style="width:130px;">Số tiền vay</th>
+                                    <th style="width:90px;">Lãi suất</th>
+                                    <th style="width:110px;">Kỳ hạn</th>
+                                    <th style="width:150px;">Phương thức</th>
+                                    <th>Tổng lãi phải trả</th>
+                                    <th style="width:70px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var loan in loans)
+                                {
+                                    var sched = loan.Method switch
+                                    {
+                                        RepaymentMethod.PrincipalEqual            => FinanceSystem.Models.Services.InterestCalculator.BuildPrincipalEqualSchedule(loan),
+                                        RepaymentMethod.AnnuityEqual              => FinanceSystem.Models.Services.InterestCalculator.BuildAnnuitySchedule(loan),
+                                        RepaymentMethod.InterestOnlyThenPrincipal => FinanceSystem.Models.Services.InterestCalculator.BuildInterestOnlySchedule(loan),
+                                        _ => new List<AmortizationRow>()
+                                    };
+                                    decimal totalInterest = sched.Sum(r => r.InterestPayment);
+                                    decimal totalPayment  = loan.Principal + totalInterest;
+                                    <tr>
+                                        <td class="ps-3">
+                                            <div class="fw-semibold small mh-text-primary">@loan.CalculatedAt.ToString("dd/MM/yyyy")</div>
+                                            <div class="mh-text-secondary" style="font-size:11px;">@loan.CalculatedAt.ToString("HH:mm")</div>
+                                        </td>
+                                        <td>
+                                            <span class="fw-semibold mh-text-primary">@loan.Principal.ToString("N0") đ</span>
+                                        </td>
+                                        <td class="mh-text-body">@((loan.AnnualInterestRate * 100).ToString("F2"))%/năm</td>
+                                        <td class="mh-text-body">@loan.TermCount @(loan.TermUnit == TermUnit.Monthly ? "tháng" : loan.TermUnit == TermUnit.Quarterly ? "quý" : "năm")</td>
+                                        <td>
+                                            <span class="badge rounded-pill" style="background:#ef444422;color:#ef4444;font-size:11px;">@MethodLabel(loan.Method)</span>
+                                        </td>
+                                        <td>
+                                            <div class="fw-semibold mh-text-primary">@totalInterest.ToString("N0") đ</div>
+                                            <div class="mh-text-secondary" style="font-size:11px;">Tổng trả: @totalPayment.ToString("N0") đ</div>
+                                        </td>
+                                        <td>
+                                            <a asp-controller="Loan" asp-action="Detail" asp-route-id="@loan.Id"
+                                               class="btn btn-outline-primary btn-sm" title="Xem chi tiết">
+                                                <i class="fa-solid fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    @* Tab: Tiết kiệm *@
+    @if (tab == "savings")
+    {
+        <div class="card border-0 shadow-sm mh-table-card" style="border-top-left-radius:0;">
+            <div class="card-body p-0">
+                @if (!savings.Any())
+                {
+                    <div class="text-center py-5 mh-text-secondary">
+                        <i class="fa-solid fa-inbox fa-2x d-block mb-2 opacity-25"></i>
+                        Chưa có phép tính tiết kiệm nào được lưu.
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive finance-table-wrap">
+                        <table class="table table-hover mb-0 mh-table">
+                            <thead>
+                                <tr>
+                                    <th class="ps-3" style="width:130px;">Thời gian</th>
+                                    <th style="width:130px;">Số tiền gốc</th>
+                                    <th style="width:90px;">Lãi suất</th>
+                                    <th style="width:90px;">Kỳ hạn</th>
+                                    <th style="width:130px;">Hình thức nhận lãi</th>
+                                    <th>Tổng lãi nhận được</th>
+                                    <th style="width:70px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var sv in savings)
+                                {
+                                    var svSched        = FinanceSystem.Models.Services.InterestCalculator.CalculateSavingsSchedule(sv);
+                                    decimal svInterest = svSched.Sum(r => r.InterestPaid);
+                                    decimal svTotal    = sv.Principal + svInterest;
+                                    <tr>
+                                        <td class="ps-3">
+                                            <div class="fw-semibold small mh-text-primary">@sv.CalculatedAt.ToString("dd/MM/yyyy")</div>
+                                            <div class="mh-text-secondary" style="font-size:11px;">@sv.CalculatedAt.ToString("HH:mm")</div>
+                                        </td>
+                                        <td>
+                                            <span class="fw-semibold mh-text-primary">@sv.Principal.ToString("N0") đ</span>
+                                        </td>
+                                        <td class="mh-text-body">@((sv.AnnualInterestRate).ToString("F2"))%/năm</td>
+                                        <td class="mh-text-body">@sv.TermMonths tháng</td>
+                                        <td>
+                                            <span class="badge rounded-pill" style="background:#10b98122;color:#10b981;font-size:11px;">@PaymentTypeLabel(sv.PaymentType)</span>
+                                        </td>
+                                        <td>
+                                            <div class="fw-semibold mh-text-primary">@svInterest.ToString("N0") đ</div>
+                                            <div class="mh-text-secondary" style="font-size:11px;">Thực nhận: @svTotal.ToString("N0") đ</div>
+                                        </td>
+                                        <td>
+                                            <a asp-controller="Savings" asp-action="Detail" asp-route-id="@sv.Id"
+                                               class="btn btn-outline-success btn-sm" title="Xem chi tiết">
+                                                <i class="fa-solid fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    @* Tab: Dòng tiền *@
+    @if (tab == "cashflow")
+    {
+        <div class="card border-0 shadow-sm mh-table-card" style="border-top-left-radius:0;">
+            <div class="card-body p-0">
+                @if (!cashFlows.Any())
+                {
+                    <div class="text-center py-5 mh-text-secondary">
+                        <i class="fa-solid fa-inbox fa-2x d-block mb-2 opacity-25"></i>
+                        Chưa có phép phân tích dòng tiền nào được lưu.
+                        <div class="mt-3">
+                            <a asp-controller="CashFlow" asp-action="Index" class="btn btn-outline-primary btn-sm">
+                                <i class="fa-solid fa-chart-line me-1"></i> Phân tích dòng tiền ngay
+                            </a>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive finance-table-wrap">
+                        <table class="table table-hover mb-0 mh-table">
+                            <thead>
+                                <tr>
+                                    <th class="ps-3" style="width:130px;">Thời gian</th>
+                                    <th style="width:100px;">Số bút toán</th>
+                                    <th style="width:100px;">Số kỳ</th>
+                                    <th style="width:140px;">Tổng thu vào</th>
+                                    <th style="width:140px;">Tổng chi ra</th>
+                                    <th>Dòng tiền thuần</th>
+                                    <th style="width:80px;">NPV</th>
+                                    <th style="width:80px;">Trạng thái</th>
+                                    <th style="width:70px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var cf in cashFlows)
+                                {
+                                    bool isPositive = cf.NetCashFlow >= 0;
+                                    <tr>
+                                        <td class="ps-3">
+                                            <div class="fw-semibold small mh-text-primary">@cf.CalculatedAt.ToString("dd/MM/yyyy")</div>
+                                            <div class="mh-text-secondary" style="font-size:11px;">@cf.CalculatedAt.ToString("HH:mm")</div>
+                                        </td>
+                                        <td class="mh-text-body">
+                                            <span class="fw-semibold">@cf.EntryCount</span>
+                                            <span class="mh-text-secondary" style="font-size:11px;"> bút toán</span>
+                                        </td>
+                                        <td class="mh-text-body">
+                                            <span class="fw-semibold">@cf.PeriodCount</span>
+                                            <span class="mh-text-secondary" style="font-size:11px;"> kỳ</span>
+                                        </td>
+                                        <td>
+                                            <span class="fw-semibold" style="color:#10b981;">+@cf.TotalInflow.ToString("N0") đ</span>
+                                        </td>
+                                        <td>
+                                            <span class="fw-semibold" style="color:#ef4444;">-@cf.TotalOutflow.ToString("N0") đ</span>
+                                        </td>
+                                        <td>
+                                            <div class="fw-semibold @(isPositive ? "" : "")" style="color:@(isPositive ? "#10b981" : "#ef4444");">
+                                                @(isPositive ? "+" : "")@cf.NetCashFlow.ToString("N0") đ
+                                            </div>
+                                            @if (!string.IsNullOrEmpty(cf.Decision))
+                                            {
+                                                <div class="mh-text-secondary" style="font-size:10px;max-width:240px;white-space:normal;line-height:1.3;">@cf.Decision</div>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (cf.InitialInvestment > 0)
+                                            {
+                                                <span class="fw-semibold" style="color:@(cf.NPV >= 0 ? "#10b981" : "#ef4444");font-size:12px;">
+                                                    @(cf.NPV >= 0 ? "+" : "")@cf.NPV.ToString("N0")
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="mh-text-secondary" style="font-size:11px;">—</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (cf.HasDeficit)
+                                            {
+                                                <span class="badge rounded-pill" style="background:#ef444422;color:#ef4444;font-size:11px;">
+                                                    <i class="fa-solid fa-triangle-exclamation me-1"></i>Có thâm hụt
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge rounded-pill" style="background:#10b98122;color:#10b981;font-size:11px;">
+                                                    <i class="fa-solid fa-check me-1"></i>Ổn định
+                                                </span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <a asp-controller="CashFlow" asp-action="Detail" asp-route-id="@cf.Id"
+                                               class="btn btn-outline-success btn-sm" title="Xem chi tiết">
+                                                <i class="fa-solid fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+</div>

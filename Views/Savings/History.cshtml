@@ -1,0 +1,80 @@
+﻿@model IEnumerable<SavingsInfo>
+@{
+    ViewData["Title"] = "Lịch Sử Tiết Kiệm";
+}
+
+<div class="container mt-4">
+
+    <div class="card shadow border-0">
+
+        <div class="card-header bg-success text-white">
+
+            <h3 class="mb-0">
+                Lịch Sử Gửi Tiết Kiệm
+            </h3>
+
+        </div>
+
+        <div class="card-body">
+
+            <table class="finance-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Ngày Gửi</th>
+                        <th>Số Tiền</th>
+                        <th>Lãi Suất</th>
+                        <th>Kỳ Hạn</th>
+                        <th>Hình Thức</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <a asp-action="Detail"
+                                   asp-route-id="@item.Id"
+                                   class="btn btn-sm btn-outline-primary">
+                                    Xem
+                                </a>
+                            </td>
+
+                            <td>
+                                @item.DepositDate.ToString("dd/MM/yyyy")
+                            </td>
+
+                            <td>
+                                @item.Principal.ToString("N0")
+                            </td>
+
+                            <td>
+                                @item.AnnualInterestRate %
+                            </td>
+
+                            <td>
+                                @item.TermMonths tháng
+                            </td>
+
+                            <td>
+                                @item.PaymentType
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>

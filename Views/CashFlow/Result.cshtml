@@ -1,0 +1,238 @@
+@model FinanceSystem.Models.ViewModels.CashFlowSummaryViewModel
+
+@{
+    ViewData["Title"] = "Kết Quả Phân Tích Dòng Tiền";
+}
+
+<div class="container page-shell">
+
+    <section class="tool-intro" style="margin-bottom: 24px;">
+        <div>
+            <span class="eyebrow">Kết quả phân tích dòng tiền</span>
+            <h1>Tổng hợp thu chi theo từng kỳ</h1>
+            <p>Dòng tiền được phân loại theo hoạt động kinh doanh, đầu tư và tài chính.</p>
+        </div>
+        <aside class="example-box" style="display:flex; flex-direction:column; justify-content:center; gap:12px;">
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="fa-solid fa-arrow-left me-1"></i> Nhập lại
+            </a>
+        </aside>
+    </section>
+
+    @if (!string.IsNullOrWhiteSpace(Model.DeficitWarning))
+    {
+        <div class="alert @Model.WarningBadgeClass d-flex gap-3 align-items-start mb-4">
+            <i class="fa-solid fa-triangle-exclamation fa-lg mt-1"></i>
+            <div>
+                <h5 class="mb-1">Cảnh báo dòng tiền</h5>
+                <p class="mb-0">@Model.DeficitWarning</p>
+            </div>
+        </div>
+    }
+
+    <!-- Tổng quan 4 chỉ số -->
+    <div class="row text-center mb-4">
+
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm p-4">
+                <h5 class="text-muted mb-2">
+                    Dòng tiền kinh doanh
+                    <span data-bs-toggle="tooltip"
+                          title="Tiền từ hoạt động kinh doanh chính: doanh thu, chi phí vận hành, lương nhân viên..."
+                          style="cursor:help; font-size:0.75rem; border-bottom:1px dotted">(?)</span>
+                </h5>
+                <h3 class="text-primary">@Model.TotalOperatingFormatted</h3>
+                <small class="text-muted">Hoạt động kinh doanh</small>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm p-4">
+                <h5 class="text-muted mb-2">
+                    Dòng tiền đầu tư
+                    <span data-bs-toggle="tooltip"
+                          title="Tiền từ hoạt động mua bán tài sản, đầu tư dài hạn: mua máy móc, bất động sản..."
+                          style="cursor:help; font-size:0.75rem; border-bottom:1px dotted">(?)</span>
+                </h5>
+                <h3 class="text-danger">@Model.TotalInvestingFormatted</h3>
+                <small class="text-muted">Hoạt động đầu tư</small>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm p-4">
+                <h5 class="text-muted mb-2">
+                    Dòng tiền tài chính
+                    <span data-bs-toggle="tooltip"
+                          title="Tiền từ vay vốn, trả nợ, phát hành cổ phần, chia cổ tức..."
+                          style="cursor:help; font-size:0.75rem; border-bottom:1px dotted">(?)</span>
+                </h5>
+                <h3 class="text-warning">@Model.TotalFinancingFormatted</h3>
+                <small class="text-muted">Hoạt động tài chính</small>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm p-4">
+                <h5 class="text-muted mb-2">Dòng tiền thuần tổng</h5>
+                <h3 class="text-success">@Model.NetTotalFormatted</h3>
+                <small class="text-muted">Tổng cộng tất cả kỳ</small>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bảng chi tiết -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-dark text-white p-4">
+            <h4 class="mb-0">Chi tiết từng kỳ</h4>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive finance-table-wrap" style="border-radius:0 0 8px 8px; border-top:none;">
+                <table class="finance-table">
+                    <thead>
+                        <tr>
+                            <th>Kỳ</th>
+                            <th>
+                                Kinh doanh
+                                <span data-bs-toggle="tooltip" title="Dòng tiền từ hoạt động kinh doanh" style="cursor:help; font-size:0.75rem; opacity:0.7">(?)</span>
+                            </th>
+                            <th>
+                                Đầu tư
+                                <span data-bs-toggle="tooltip" title="Dòng tiền từ hoạt động đầu tư" style="cursor:help; font-size:0.75rem; opacity:0.7">(?)</span>
+                            </th>
+                            <th>
+                                Tài chính
+                                <span data-bs-toggle="tooltip" title="Dòng tiền từ hoạt động tài chính" style="cursor:help; font-size:0.75rem; opacity:0.7">(?)</span>
+                            </th>
+                            <th>Dòng tiền thuần</th>
+                            <th>Tích lũy</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in Model.PeriodSummaries)
+                        {
+                            <tr>
+                                <td>Kỳ @row.Period</td>
+                                <td>@row.OperatingCF.ToString("N0")</td>
+                                <td class="@(row.InvestingCF < 0 ? "val-negative" : "")">
+                                    @row.InvestingCF.ToString("N0")
+                                </td>
+                                <td class="@(row.FinancingCF < 0 ? "val-negative" : "")">
+                                    @row.FinancingCF.ToString("N0")
+                                </td>
+                                <td class="@(row.NetCashFlow >= 0 ? "val-positive" : "val-negative")">
+                                    @row.NetCashFlow.ToString("N0")
+                                </td>
+                                <td class="@(row.CumulativeBalance >= 0 ? "val-positive" : "val-negative")">
+                                    @row.CumulativeBalance.ToString("N0")
+                                </td>
+                                <td>
+                                    @if (row.IsDeficit)
+                                    {
+                                        <span class="badge-status-negative">Thâm hụt</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge-status-positive">Dương</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td>Tổng</td>
+                            <td>@Model.TotalOperatingFormatted</td>
+                            <td class="@(Model.PeriodSummaries.Sum(r => r.InvestingCF) < 0 ? "val-total-negative" : "val-total-positive")">
+                                @Model.TotalInvestingFormatted
+                            </td>
+                            <td>@Model.TotalFinancingFormatted</td>
+                            <td class="val-total-positive">@Model.NetTotalFormatted</td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Biểu đồ -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-dark text-white p-4">
+            <h4 class="mb-0">Biểu đồ dòng tiền</h4>
+        </div>
+        <div class="card-body p-4">
+            <div style="height: 380px;">
+                <canvas id="cashFlowChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a asp-action="Index" class="btn btn-dark">
+            <i class="fa-solid fa-arrow-left me-1"></i> Nhập lại
+        </a>
+    </div>
+
+</div>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+
+        window.addEventListener('load', function () {
+            const ctx = document.getElementById('cashFlowChart');
+            if (!ctx) return;
+            new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: [@Html.Raw(Model.ChartLabels)],
+                    datasets: [
+                        {
+                            label: 'Kinh doanh',
+                            data: [@Html.Raw(Model.OperatingData)],
+                            backgroundColor: 'rgba(54, 162, 235, 0.7)'
+                        },
+                        {
+                            label: 'Đầu tư',
+                            data: [@Html.Raw(Model.InvestingData)],
+                            backgroundColor: 'rgba(255, 99, 132, 0.7)'
+                        },
+                        {
+                            label: 'Tài chính',
+                            data: [@Html.Raw(Model.FinancingData)],
+                            backgroundColor: 'rgba(255, 206, 86, 0.7)'
+                        },
+                        {
+                            label: 'Tích lũy',
+                            data: [@Html.Raw(Model.CumulativeData)],
+                            type: 'line',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                            fill: false,
+                            tension: 0.3,
+                            yAxisID: 'y'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => ctx.dataset.label + ': ' + ctx.raw.toLocaleString('vi-VN') + ' ₫'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { ticks: { callback: v => v.toLocaleString('vi-VN') + ' ₫' } }
+                    }
+                }
+            });
+        });
+    </script>
+}

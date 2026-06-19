@@ -1,0 +1,193 @@
+@model List<FinanceSystem.Models.Entities.AppUser>
+
+@{
+    ViewData["Title"] = "Quản Lý Người Dùng";
+    int page      = ViewBag.Page;
+    int totalPage = ViewBag.TotalPage;
+    int total     = ViewBag.Total;
+    string? search = ViewBag.Search;
+}
+
+<div class="container page-shell">
+
+    <section class="tool-intro" style="margin-bottom: 24px;">
+        <div>
+            <span class="eyebrow" style="font-size: 1.5rem">Quản trị hệ thống</span>
+            <h1><i class="fa-solid fa-users me-2"></i>Quản Lý Người Dùng</h1>
+            <p>Xem danh sách, khóa / mở khóa tài khoản và phân quyền Admin.</p>
+        </div>
+        <aside class="example-box" style="display:flex;flex-direction:column;gap:10px;">
+            <a asp-action="UserActivity" class="btn btn-outline-info btn-sm">
+                <i class="fa-solid fa-clock-rotate-left me-1"></i> Lịch sử hoạt động
+            </a>
+        </aside>
+    </section>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fa-solid fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-dark text-white p-3 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Danh sách tài khoản (@total người dùng)</h5>
+            <form asp-action="Users" method="get" class="d-flex gap-2">
+                <input type="text" name="search" value="@search" class="form-control form-control-sm"
+                       placeholder="Tìm username / email..." style="width:220px;" />
+                <button type="submit" class="btn btn-sm btn-primary">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+                @if (!string.IsNullOrEmpty(search))
+                {
+                    <a asp-action="Users" class="btn btn-sm btn-outline-secondary">
+                        <i class="fa-solid fa-xmark"></i>
+                    </a>
+                }
+            </form>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive finance-table-wrap">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-3">#</th>
+                            <th>Tên đăng nhập</th>
+                            <th>Email</th>
+                            <th>Vai trò</th>
+                            <th>Ngày tạo</th>
+                            <th>Trạng thái</th>
+                            <th class="text-end pe-3">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    Không tìm thấy người dùng nào.
+                                </td>
+                            </tr>
+                        }
+                        @{int idx = (page - 1) * 15 + 1;}
+                        @foreach (var user in Model)
+                        {
+                            var isCurrentUser = user.Username == User.Identity!.Name;
+                            <tr>
+                                <td class="ps-3 text-muted">@(idx++)</td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                                             style="width:32px;height:32px;background:rgba(99,102,241,0.15);color:#6366f1;font-size:13px;">
+                                            @user.Username.Substring(0, 1).ToUpper()
+                                        </div>
+                                        <span class="fw-semibold">@user.Username</span>
+                                        @if (isCurrentUser)
+                                        {
+                                            <span class="badge bg-danger" style="font-size:10px;">Bạn</span>
+                                        }
+                                    </div>
+                                </td>
+                                <td class="text-dark">@user.Email</td>
+                                <td>
+                                    @foreach (var ur in user.UserRoles)
+                                    {
+                                        var badgeColor = ur.Role?.RoleName == "Admin" ? "danger" : "secondary";
+                                        <span class="badge bg-@badgeColor me-1">@ur.Role?.RoleName</span>
+                                    }
+                                </td>
+                                <td class="text-dark small">@user.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    @if (user.IsLocked)
+                                    {
+                                        <span class="badge bg-danger"><i class="fa-solid fa-lock me-1"></i>Bị khóa</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success"><i class="fa-solid fa-circle-check me-1"></i>Hoạt động</span>
+                                    }
+                                </td>
+                                <td class="text-end pe-3">
+                                    <div class="d-flex gap-1 justify-content-end flex-wrap">
+                                        <a asp-action="UserActivity" asp-route-userId="@user.Id"
+                                           class="btn btn-sm btn-outline-info" title="Lịch sử hoạt động">
+                                            <i class="fa-solid fa-clock-rotate-left"></i>
+                                        </a>
+
+                                        @if (!isCurrentUser)
+                                        {
+                                            <form asp-action="ToggleLock" method="post" class="d-inline"
+                                                  onsubmit="return confirm('@(user.IsLocked ? "Xác nhận mở khóa tài khoản này?" : "Xác nhận khóa tài khoản này?")')">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@user.Id" />
+                                                <button type="submit"
+                                                        class="btn btn-sm @(user.IsLocked ? "btn-outline-success" : "btn-outline-danger")"
+                                                        title="@(user.IsLocked ? "Mở khóa" : "Khóa tài khoản")">
+                                                    <i class="fa-solid @(user.IsLocked ? "fa-lock-open" : "fa-lock")"></i>
+                                                </button>
+                                            </form>
+                                        }
+
+                                        @if (!isCurrentUser)
+                                        {
+                                            @if (!user.IsAdmin())
+                                            {
+                                                <form asp-action="PromoteToAdmin" method="post" class="d-inline"
+                                                      onsubmit="return confirm('Cấp quyền Admin cho @user.Username?')">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@user.Id" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-warning" title="Cấp quyền Admin">
+                                                        <i class="fa-solid fa-user-shield"></i>
+                                                    </button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <form asp-action="RevokeAdmin" method="post" class="d-inline"
+                                                      onsubmit="return confirm('Thu hồi quyền Admin của @user.Username?')">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@user.Id" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-secondary" title="Thu hồi Admin">
+                                                        <i class="fa-solid fa-user-minus"></i>
+                                                    </button>
+                                                </form>
+                                            }
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        @if (totalPage > 1)
+        {
+            <div class="card-footer bg-transparent border-0">
+                <nav>
+                    <ul class="pagination pagination-sm mb-0 justify-content-center">
+                        @for (int p = 1; p <= totalPage; p++)
+                        {
+                            <li class="page-item @(p == page ? "active" : "")">
+                                <a class="page-link" asp-action="Users"
+                                   asp-route-page="@p" asp-route-search="@search">@p</a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            </div>
+        }
+    </div>
+
+</div>

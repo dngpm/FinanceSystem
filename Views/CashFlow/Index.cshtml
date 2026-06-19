@@ -1,0 +1,285 @@
+@model List<FinanceSystem.Models.Entities.CashFlowEntry>
+
+@{
+    ViewData["Title"] = "Phân Tích Dòng Tiền";
+}
+
+<style>
+    /* 1. ĐỊNH DẠNG KHUNG VIỀN RÕ NÉT CỦA CÁC Ô NHẬP LIỆU */
+    .form-control, .form-select, .input-group-text {
+        border: 2px solid #b0b8c0 !important;
+        transition: all 0.2s ease-in-out;
+    }
+    
+        .form-control:focus, .form-select:focus {
+            border-color: #0d6efd !important;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15) !important;
+        }
+
+    /* 2. NÚT PHÂN TÍCH DÒNG TIỀN (GIỮ NGUYÊN) */
+    .btn-submit-cashflow {
+        background-color: #212529 !important;
+        color: #ffffff !important;
+        border: 2px solid #212529 !important;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+
+        .btn-submit-cashflow:hover {
+            background-color: #343a40 !important;
+            border-color: #343a40 !important;
+        }
+
+    /* 3. NÚT THÊM DÒNG - MÀU XANH LÁ (CHẾ ĐỘ SÁNG) */
+    .btn-add-row {
+        background-color: #198754 !important; /* Xanh lá Bootstrap */
+        color: #ffffff !important;
+        border: 2px solid #198754 !important;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+
+        .btn-add-row:hover {
+            background-color: #157347 !important;
+            border-color: #157347 !important;
+        }
+
+    /* 4. DARK MODE TỰ ĐỘNG (prefers-color-scheme) */
+    @@media (prefers-color-scheme: dark) {
+        .form-control, .form-select, .input-group-text {
+            border-color: #6c757d !important;
+        }
+
+        .btn-submit-cashflow {
+            background-color: #0d6efd !important;
+            border-color: #0d6efd !important;
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+        }
+
+            .btn-submit-cashflow:hover {
+                background-color: #0b5ed7 !important;
+            }
+        /* NÚT THÊM DÒNG Ở DARK MODE - VẪN XANH LÁ NHƯNG TỐI HƠN */
+        .btn-add-row {
+            background-color: #146c43 !important;
+            border-color: #146c43 !important;
+            box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
+        }
+
+            .btn-add-row:hover {
+                background-color: #0f5c39 !important;
+                border-color: #0f5c39 !important;
+            }
+    }
+
+    /* 5. HỖ TRỢ DATA-BS-THEME DARK */
+    [data-bs-theme="dark"] .form-control,
+    [data-bs-theme="dark"] .form-select,
+    [data-bs-theme="dark"] .input-group-text {
+        border-color: #6c757d !important;
+    }
+
+    [data-bs-theme="dark"] .btn-submit-cashflow {
+        background-color: #0d6efd !important;
+        border-color: #0d6efd !important;
+        box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+    }
+
+        [data-bs-theme="dark"] .btn-submit-cashflow:hover {
+            background-color: #0b5ed7 !important;
+        }
+
+    [data-bs-theme="dark"] .btn-add-row {
+        background-color: #146c43 !important;
+        border-color: #146c43 !important;
+        box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
+    }
+
+        [data-bs-theme="dark"] .btn-add-row:hover {
+            background-color: #0f5c39 !important;
+        }
+</style>
+
+<div class="container page-shell">
+    <section class="tool-intro">
+        <div>
+            <span class="eyebrow" style="font-size: 1.5rem;">Theo dõi thu chi theo kỳ</span>
+            <h1>Lập bảng dòng tiền theo từng kỳ</h1>
+            <p>Nhập các khoản thu chi dự kiến để xem tiền vào ra từ đâu và tổng dòng tiền tích lũy qua từng kỳ.</p>
+        </div>
+        <aside class="example-box">
+            <h2>Cách nhập số tiền</h2>
+            <p>Tiền vào nhập số <strong>dương</strong> (ví dụ: 5000000).</p>
+            <p>Tiền ra nhập số <strong>âm</strong> (ví dụ: -2000000).</p>
+            <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="fillCashflowExample">Điền ví dụ mẫu</button>
+        </aside>
+    </section>
+
+    <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+        <div class="card-header bg-dark text-white p-4">
+            <h2 class="mb-1">Nhập các khoản thu chi</h2>
+            <p class="mb-0 opacity-75">Thêm từng dòng thu hoặc chi. Hệ thống tự tổng hợp theo kỳ.</p>
+        </div>
+        <div class="card-body p-4">
+            <div class="alert alert-info d-flex justify-content-center gap-3 align-items-start mb-4">
+                <i class="fa-solid fa-circle-info fa-lg mt-1"></i>
+                <div>
+                    <strong>Phân loại dòng tiền:</strong>
+                    <ul class="mb-0 mt-1">
+                        <li><strong>Kinh doanh</strong>: thu từ bán hàng/dịch vụ, chi lương, chi vận hành...</li>
+                        <li><strong>Đầu tư</strong>: mua/bán máy móc, bất động sản, tài sản dài hạn...</li>
+                        <li><strong>Tài chính</strong>: vay vốn, trả nợ gốc, trả lãi, chia cổ tức...</li>
+                    </ul>
+                </div>
+            </div>
+
+            <form asp-action="Dashboard" method="post" id="cashFlowForm">
+                @Html.AntiForgeryToken()
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Vốn đầu tư ban đầu / dòng tiền kỳ 0 (VND)</label>
+                        <input name="initialInvestment" class="form-control" type="number" min="0" value="500000000" placeholder="Ví dụ: 500000000" />
+                        <div class="form-text">Dùng để tính NPV và IRR. Nhập 0 nếu chỉ muốn phân tích thu chi.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Lãi suất chiết khấu (%/kỳ)</label>
+                        <input name="discountRate" class="form-control" type="number" min="0.01" max="100" step="0.01" value="10" placeholder="Ví dụ: 10" />
+                        <div class="form-text">Hệ thống dùng lãi suất này để quy đổi giá trị hiện tại và tương lai.</div>
+                    </div>
+                </div>
+
+                <div class="row fw-bold text-muted mb-2 d-none d-md-flex px-1">
+                    <div class="col-md-4">Mô tả khoản thu/chi</div>
+                    <div class="col-md-2">Số tiền (VND) <span data-bs-toggle="tooltip" title="Tiền vào: số dương. Tiền ra: số âm (thêm dấu trừ)." style="cursor:help; border-bottom:1px dotted; font-size:0.75rem">(?)</span></div>
+                    <div class="col-md-2">Kỳ <span data-bs-toggle="tooltip" title="Kỳ 1 là tháng/quý/năm thứ nhất, kỳ 2 là tháng/quý/năm thứ hai, v.v." style="cursor:help; border-bottom:1px dotted; font-size:0.75rem">(?)</span></div>
+                    <div class="col-md-3">Loại dòng tiền</div>
+                    <div class="col-md-1"></div>
+                </div>
+
+                <div id="entries-container">
+                    @for (int i = 0; i < Model.Count; i++)
+                    {
+                        <div class="card mb-3 p-3 shadow-sm entry-row">
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold d-md-none">Mô tả</label>
+                                    <input name="entries[@i].Description" value="@Model[i].Description" class="form-control" placeholder="Ví dụ: Doanh thu tháng 1, Trả lương..." />
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label fw-bold d-md-none">Số tiền (VND)</label>
+                                    <input name="entries[@i].Amount" value="@Model[i].Amount" class="form-control" type="number" placeholder="Dương: thu. Âm: chi" />
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label fw-bold d-md-none">Kỳ</label>
+                                    <input name="entries[@i].Period" value="@Model[i].Period" class="form-control" type="number" min="1" placeholder="1" />
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold d-md-none">Loại</label>
+                                    <select name="entries[@i].Type" class="form-select">
+                                        <option value="0" selected="@(Model[i].Type == FinanceSystem.Models.Entities.CashFlowType.Operating)">Kinh doanh</option>
+                                        <option value="1" selected="@(Model[i].Type == FinanceSystem.Models.Entities.CashFlowType.Investing)">Đầu tư</option>
+                                        <option value="2" selected="@(Model[i].Type == FinanceSystem.Models.Entities.CashFlowType.Financing)">Tài chính</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-1">
+                                    <button type="button" class="btn btn-outline-danger w-100" onclick="this.closest('.entry-row').remove()" title="Xóa dòng này">✕</button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div class="d-flex justify-content-center gap-3 mt-4">
+                    <!-- NÚT THÊM DÒNG MÀU XANH LÁ -->
+                    <button type="button" class="btn btn-add-row" id="addRowBtn">
+                        <i class="fa-solid fa-plus me-1"></i> Thêm dòng
+                    </button>
+                    <button type="submit" class="btn btn-submit-cashflow btn-lg px-4">
+                        <i class="fa-solid fa-chart-bar me-2"></i>Phân tích dòng tiền
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let rowIndex = @Model.Count;
+
+        if (rowIndex === 0) {
+            setTimeout(() => { document.getElementById('addRowBtn').click(); }, 50);
+        }
+
+        function createRowHtml(index) {
+            return `
+                <div class="card mb-3 p-3 shadow-sm entry-row">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold d-md-none">Mô tả</label>
+                            <input name="entries[${index}].Description" class="form-control" placeholder="Ví dụ: Doanh thu tháng 1, Trả lương..." />
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-bold d-md-none">Số tiền (VND)</label>
+                            <input name="entries[${index}].Amount" class="form-control" type="number" placeholder="Dương: thu. Âm: chi" />
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-bold d-md-none">Kỳ</label>
+                            <input name="entries[${index}].Period" class="form-control" type="number" value="1" min="1" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold d-md-none">Loại</label>
+                            <select name="entries[${index}].Type" class="form-select">
+                                <option value="0">Kinh doanh</option>
+                                <option value="1">Đầu tư</option>
+                                <option value="2">Tài chính</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1">
+                            <button type="button" class="btn btn-outline-danger w-100"
+                                    onclick="this.closest('.entry-row').remove()" title="Xóa dòng này">✕</button>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        document.getElementById('addRowBtn').addEventListener('click', function () {
+            const container = document.getElementById('entries-container');
+            const div = document.createElement('div');
+            div.innerHTML = createRowHtml(rowIndex);
+            container.appendChild(div.firstElementChild);
+            rowIndex++;
+        });
+
+        document.getElementById('fillCashflowExample').addEventListener('click', function () {
+            const container = document.getElementById('entries-container');
+            container.innerHTML = '';
+            rowIndex = 0;
+
+            const examples = [
+                { desc: 'Doanh thu bán hàng', amount: 50000000, period: 1, type: 0 },
+                { desc: 'Chi phí vận hành', amount: -20000000, period: 1, type: 0 },
+                { desc: 'Trả lãi vay', amount: -5000000, period: 1, type: 2 },
+                { desc: 'Doanh thu bán hàng', amount: 55000000, period: 2, type: 0 },
+                { desc: 'Chi phí vận hành', amount: -21000000, period: 2, type: 0 },
+                { desc: 'Trả lãi vay', amount: -5000000, period: 2, type: 2 },
+            ];
+            examples.forEach(function(ex) {
+                const div = document.createElement('div');
+                div.innerHTML = createRowHtml(rowIndex);
+                const row = div.firstElementChild;
+                row.querySelector('input[name$=".Description"]').value = ex.desc;
+                row.querySelector('input[name$=".Amount"]').value = ex.amount;
+                row.querySelector('input[name$=".Period"]').value = ex.period;
+                row.querySelector('select[name$=".Type"]').value = ex.type;
+                container.appendChild(row);
+                rowIndex++;
+            });
+        });
+
+        if (typeof bootstrap !== 'undefined') {
+            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+        }
+    </script>
+}

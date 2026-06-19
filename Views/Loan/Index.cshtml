@@ -1,0 +1,326 @@
+@model FinanceSystem.Models.Entities.LoanInfo
+
+@{
+    ViewData["Title"] = "Tính khoản vay";
+}
+
+<style>
+    /* 1. ĐỊNH DẠNG KHUNG VIỀN RÕ NÉT CỦA CÁC Ô NHẬP LIỆU */
+    .form-control, .form-select, .input-group-text {
+        border: 2px solid #b0b8c0 !important; /* Viền dày và rõ hơn ở chế độ sáng */
+        transition: all 0.2s ease-in-out;
+    }
+    
+        .form-control:focus, .form-select:focus {
+            border-color: #0d6efd !important;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15) !important;
+        }
+
+    /* 2. ĐỊNH DẠNG NÚT BẤM DỰA TRÊN CHẾ ĐỘ NỀN */
+    .btn-submit-loan {
+        background-color: #212529 !important;
+        color: #ffffff !important;
+        border: 2px solid #212529 !important;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+    
+        .btn-submit-loan:hover {
+            background-color: #343a40 !important;
+            border-color: #343a40 !important;
+        }
+
+    /* Tự động tối ưu hóa khi hệ thống hoặc thẻ HTML kích hoạt Dark Mode */
+    @@media (prefers-color-scheme: dark) {
+        .form-control, .form-select, .input-group-text {
+            border-color: #6c757d !important; /* Viền sáng hơn nền tối để thấy rõ khung */
+        }
+
+        .btn-submit-loan {
+            background-color: #0d6efd !important; /* Chuyển sang màu xanh nổi bật trong nền tối */
+            color: #ffffff !important;
+            border-color: #0d6efd !important;
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+        }
+
+        .btn-submit-loan:hover {
+            background-color: #0b5ed7 !important;
+            border-color: #0b5ed7 !important;
+        }
+    }
+
+    /* Hỗ trợ thêm nếu dự án dùng thuộc tính data-bs-theme="dark" của Bootstrap 5.3+ */
+    [data-bs-theme="dark"] .form-control,
+    [data-bs-theme="dark"] .form-select,
+    [data-bs-theme="dark"] .input-group-text {
+        border-color: #6c757d !important;
+    }
+    
+    [data-bs-theme="dark"] .btn-submit-loan {
+        background-color: #0d6efd !important;
+        color: #ffffff !important;
+        border-color: #0d6efd !important;
+        box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+    }
+
+        [data-bs-theme="dark"] .btn-submit-loan:hover {
+            background-color: #0b5ed7 !important;
+        }
+</style>
+
+<div class="container page-shell">
+    <section class="tool-intro">
+        <div>
+            <h1>Tính khoản vay để biết mỗi kỳ phải trả bao nhiêu</h1>
+            <p>
+                Nhập số tiền vay, lãi suất ngân hàng báo cho bạn và thời gian vay.
+                Hệ thống sẽ lập lịch trả nợ và giúp bạn so sánh các cách trả.
+            </p>
+        </div>
+        <aside class="example-box">
+            <h2>Ví dụ mẫu</h2>
+            <p>Vay 1.000.000.000 VND trong 20 năm, lãi suất 8%/năm, trả đều hằng tháng.</p>
+            <button type="button" class="btn btn-outline-primary btn-sm" id="fillLoanExample">
+                Điền ví dụ này
+            </button>
+        </aside>
+    </section>
+
+    <div class="row g-4 align-items-start">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white p-4">
+                    <h2 class="mb-1">Thông tin khoản vay</h2>
+                    <p class="mb-0 opacity-75">Chỉ cần nhập các số trên hợp đồng hoặc bảng tư vấn của ngân hàng.</p>
+                </div>
+
+                <div class="card-body p-4 p-lg-5">
+                    <form asp-action="Calculate" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <div asp-validation-summary="All" class="alert alert-danger mb-4"></div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label asp-for="Principal" class="form-label fw-bold">
+                                    Số tiền muốn vay
+                                    <span class="help-dot" data-bs-toggle="tooltip" title="Tổng số tiền ngân hàng giải ngân cho bạn, chưa tính lãi.">?</span>
+                                </label>
+                                <div class="input-group">
+                                    <input asp-for="Principal" class="form-control form-control-lg" placeholder="Ví dụ: 1000000000">
+                                    <span class="input-group-text">VND</span>
+                                </div>
+                                <div class="form-text">Nhập số tiền gốc bạn cần vay. Có thể nhập 500.000.000 hoặc 500000000.</div>
+                                <span asp-validation-for="Principal" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <label asp-for="AnnualInterestRate" class="form-label fw-bold">
+                                    Lãi suất ngân hàng báo
+                                    <span class="help-dot" data-bs-toggle="tooltip" title="Nếu ngân hàng báo 8%/năm, hãy nhập 8. Hệ thống sẽ tự quy đổi khi tính.">?</span>
+                                </label>
+                                <div class="input-group">
+                                    <input asp-for="AnnualInterestRate"
+                                           class="form-control form-control-lg"
+                                           placeholder="Ví dụ: 8"
+                                           required
+                                           oninvalid="this.setCustomValidity('Vui lòng nhập lãi suất hằng năm')"
+                                           oninput="this.setCustomValidity('')" />
+                                    <span class="input-group-text">%/năm</span>
+                                </div>
+                                <div class="form-text">Đây là lãi suất niêm yết. Kết quả có thể hiện lãi suất thực tế nếu có phí.</div>
+                                <span asp-validation-for="AnnualInterestRate" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label asp-for="TermCount" class="form-label fw-bold">
+                                    Thời gian vay
+                                    <span class="help-dot" data-bs-toggle="tooltip" title="Nếu vay 20 năm, nhập 20 và chọn Hằng năm. Nếu vay 240 tháng, nhập 240 và chọn Hằng tháng.">?</span>
+                                </label>
+                                <input asp-for="TermCount" id="termCount" class="form-control form-control-lg" placeholder="Ví dụ: 20" />
+                                <span asp-validation-for="TermCount" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <label asp-for="TermUnit" class="form-label fw-bold">Đơn vị thời gian</label>
+                                <select asp-for="TermUnit" class="form-select form-select-lg">
+                                    <option value="0">Hằng tháng</option>
+                                    <option value="1">Hằng quý</option>
+                                    <option value="2">Hằng năm</option>
+                                </select>
+                                <div class="form-text">Chọn đơn vị đúng với cách bạn nhập thời gian vay.</div>
+                                <span asp-validation-for="TermUnit" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="Method" class="form-label fw-bold">Cách trả nợ</label>
+                            <select asp-for="Method" class="form-select form-select-lg" id="repaymentMethod">
+                                <option value="0">Gốc đều - tiền trả giảm dần</option>
+                                <option value="1">Trả đều hằng kỳ - mỗi kỳ gần như bằng nhau</option>
+                                <option value="2">Trả lãi trước, trả gốc sau</option>
+                            </select>
+                            <div class="method-explainer" id="methodExplainer"></div>
+                            <span asp-validation-for="Method" class="text-danger"></span>
+                        </div>
+
+                        <div class="soft-panel mb-4">
+                            <div class="form-check form-switch">
+                                <input asp-for="IsEarlyRepayment" class="form-check-input" type="checkbox" id="earlyRepaymentSwitch" />
+                                <label asp-for="IsEarlyRepayment" class="form-check-label fw-bold">
+                                    Tôi dự kiến trả trước hạn
+                                </label>
+                            </div>
+                            <p class="mb-3 text-muted">Bật tùy chọn này nếu bạn nghĩ sẽ tất toán sớm một phần hoặc toàn bộ khoản vay.</p>
+
+                            <div id="earlyRepaymentPeriodGroup" class="d-none">
+                                <label asp-for="EarlyRepaymentPeriod" class="form-label fw-bold">Trả trước ở kỳ số mấy?</label>
+                                <input asp-for="EarlyRepaymentPeriod" class="form-control form-control-lg" placeholder="Ví dụ: 36 nếu trả sau 36 tháng" />
+                                <span asp-validation-for="EarlyRepaymentPeriod" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="d-grid mt-5">
+                            <button type="submit" class="btn btn-submit-loan btn-lg py-3">
+                                Tính lịch trả nợ
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <aside class="guide-panel sticky-lg-top">
+                <h2>Đọc nhanh trước khi nhập</h2>
+                <div class="guide-item">
+                    <strong>Lãi suất niêm yết</strong>
+                    <p>Là con số ngân hàng công bố, ví dụ 8%/năm. Đây chưa chắc là chi phí thật nếu có phí dịch vụ.</p>
+                </div>
+                <div class="guide-item">
+                    <strong>EIR - lãi suất thực tế</strong>
+                    <p>Là chi phí vay sau khi tính cách trả nợ và phí. Dùng EIR để so sánh hai gói vay.</p>
+                </div>
+                <div class="guide-item">
+                    <strong>Nên chọn cách trả nào?</strong>
+                    <p>Trả đều để dễ quản lý ngân sách hằng tháng. Gốc đều phù hợp nếu bạn chịu được tiền trả cao lúc đầu.</p>
+                </div>
+            </aside>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const principalInput = document.querySelector('[name="Principal"]');
+            const rateInput = document.querySelector('[name="AnnualInterestRate"]');
+            const termCountInput = document.getElementById("termCount");
+            const termUnitInput = document.querySelector('[name="TermUnit"]');
+            const methodInput = document.getElementById("repaymentMethod");
+            const methodExplainer = document.getElementById("methodExplainer");
+            const fillExampleButton = document.getElementById("fillLoanExample");
+
+            const methodText = {
+                "0": "Bạn trả một phần gốc bằng nhau mỗi kỳ. Tiền lãi tính trên dư nợ còn lại, nên tổng tiền trả sẽ giảm dần theo thời gian.",
+                "1": "Tổng tiền trả mỗi kỳ gần như bằng nhau. Cách này dễ lập ngân sách hằng tháng và thường gặp với vay mua nhà.",
+                "2": "Trong thời gian đầu bạn chủ yếu trả lãi, tiền gốc để đến cuối kỳ. Cần cẩn trọng vì áp lực trả gốc về sau sẽ lớn."
+            };
+
+            function updateMethodExplainer() {
+                if (methodExplainer && methodInput) {
+                    methodExplainer.textContent = methodText[methodInput.value] || "";
+                }
+            }
+
+            if (principalInput) {
+                principalInput.addEventListener("focus", function () {
+                    if (this.value === "0" || this.value === "0,00" || this.value === "0.00") {
+                        this.value = "";
+                    }
+                });
+
+                principalInput.addEventListener("input", function () {
+                    const cursorPosition = this.selectionStart;
+                    const oldValue = this.value;
+                    const value = oldValue.replace(/\D/g, "");
+
+                    if (value === "") {
+                        this.value = "";
+                        return;
+                    }
+
+                    const formattedValue = Number(value).toLocaleString("vi-VN");
+                    this.value = formattedValue;
+
+                    const diff = formattedValue.length - oldValue.length;
+                    this.setSelectionRange(cursorPosition + diff, cursorPosition + diff);
+                });
+            }
+
+            if (rateInput) {
+                rateInput.addEventListener("focus", function () {
+                    if (this.value === "0" || this.value === "0,00" || this.value === "0.00") {
+                        this.value = "";
+                    }
+                });
+            }
+
+            if (termCountInput) {
+                termCountInput.addEventListener("focus", function () {
+                    if (this.value === "24") {
+                        this.value = "";
+                    }
+                });
+            }
+
+            if (fillExampleButton) {
+                fillExampleButton.addEventListener("click", function () {
+                    if (principalInput) principalInput.value = Number(1000000000).toLocaleString("vi-VN");
+                    if (rateInput) rateInput.value = "8";
+                    if (termCountInput) termCountInput.value = "20";
+                    if (termUnitInput) termUnitInput.value = "2";
+                    if (methodInput) methodInput.value = "1";
+                    updateMethodExplainer();
+                });
+            }
+
+            if (methodInput) {
+                methodInput.addEventListener("change", updateMethodExplainer);
+                updateMethodExplainer();
+            }
+
+            const earlySwitch = document.getElementById("earlyRepaymentSwitch");
+            const earlyGroup = document.getElementById("earlyRepaymentPeriodGroup");
+            const earlyInput = document.querySelector('[name="EarlyRepaymentPeriod"]');
+
+            function toggleEarlyRepayment() {
+                if (earlySwitch.checked) {
+                    earlyGroup.classList.remove("d-none");
+                } else {
+                    earlyGroup.classList.add("d-none");
+                    if (earlyInput) earlyInput.value = "";
+                }
+            }
+
+            if (earlySwitch) {
+                earlySwitch.addEventListener("change", toggleEarlyRepayment);
+                toggleEarlyRepayment(); // Áp dụng trạng thái ban đầu khi load trang
+            }
+
+            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (element) {
+                new bootstrap.Tooltip(element);
+            });
+
+            document.querySelector("form").addEventListener("submit", function () {
+                if (principalInput) {
+                    principalInput.value = principalInput.value.replace(/\./g, "");
+                }
+            });
+        });
+    </script>
+}

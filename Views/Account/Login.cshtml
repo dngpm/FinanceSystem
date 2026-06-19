@@ -1,0 +1,232 @@
+@{
+    ViewData["Title"] = "Đăng nhập";
+    ViewData["MinimalNav"] = true;
+}
+
+<main class="login-screen">
+    <section class="login-hero">
+        <div class="login-brand">
+            <span class="login-badge">
+                <span></span>
+                CASHFLOW PRO
+            </span>
+
+            <h1>
+                Hệ thống
+                <strong>tính toán lãi suất &amp; phân tích dòng tiền</strong>
+            </h1>
+
+            <p>
+                Theo dõi lợi nhuận, quản lý nguồn vốn và xem báo cáo dòng tiền
+                theo thời gian thực trong một giao diện hiện đại, dễ sử dụng.
+            </p>
+        </div>
+
+        <div class="login-feature-grid">
+            <article>
+                <i class="fa-solid fa-check"></i>
+                <h2>Tính lãi nhanh</h2>
+                <p>Ước tính lãi đơn, lãi kép và các kịch bản đầu tư chỉ trong vài giây.</p>
+            </article>
+
+            <article>
+                <i class="fa-solid fa-check"></i>
+                <h2>Phân tích dòng tiền</h2>
+                <p>Xem dòng tiền vào - ra, dự báo thiếu hụt và tối ưu kế hoạch tài chính.</p>
+            </article>
+
+            <article>
+                <i class="fa-solid fa-check"></i>
+                <h2>Báo cáo trực quan</h2>
+                <p>Dashboard rõ ràng với biểu đồ, chỉ số và cảnh báo rủi ro tức thì.</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="login-card" aria-label="Biểu mẫu đăng nhập">
+        <div class="login-card-heading">
+            <span>CHÀO MỪNG TRỞ LẠI</span>
+            <h2>Đăng nhập tài khoản</h2>
+            <p>Truy cập vào công cụ tính lãi suất và phân tích dòng tiền của bạn.</p>
+        </div>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success">
+                @TempData["Success"]
+            </div>
+        }
+
+        <div asp-validation-summary="All" class="login-validation"></div>
+
+        <form asp-action="Login" method="post" class="login-form">
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+
+            <div>
+                <label>Email hoặc tên đăng nhập</label>
+                <input name="username" autocomplete="username" placeholder="ten@congty.com" />
+            </div>
+
+            <div>
+                <label>Mật khẩu</label>
+                <div class="password-field">
+                    <input name="password" id="loginPassword" type="password" autocomplete="current-password" placeholder="••••••••" />
+                    <button type="button" id="togglePassword">Hiện</button>
+                </div>
+            </div>
+
+            <div class="login-options">
+                <label>
+                    <input type="checkbox" checked />
+                    Ghi nhớ đăng nhập
+                </label>
+                <a asp-action="ForgotPassword">Quên mật khẩu?</a>
+            </div>
+
+            <button type="submit" class="login-submit">Đăng nhập</button>
+        </form>
+
+        <!-- Dùng thử không cần tài khoản -->
+        <div class="guest-entry">
+            <div class="guest-entry-icon">
+                <i class="fa-solid fa-user-slash"></i>
+            </div>
+            <div class="guest-entry-body">
+                <span class="guest-entry-label">Dùng thử miễn phí</span>
+                <p>Khám phá các tính năng mà không cần đăng ký tài khoản.</p>
+                <a asp-action="Guest" class="guest-entry-btn">
+                    <i class="fa-solid fa-arrow-right-to-bracket me-1"></i>
+                    Tiếp tục với tư cách khách
+                </a>
+            </div>
+        </div>
+
+        <div class="login-register">
+            <span>Chưa có tài khoản?</span>
+            <a asp-action="Register">Đăng ký tại đây</a>
+        </div>
+    </section>
+</main>
+
+<section class="team-section" aria-label="Thành viên nhóm">
+    <div class="team-header">
+        <i class="fa-solid fa-users-gear team-header-icon"></i>
+        <div>
+            <h2>Thành viên &amp; Phân công công việc</h2>
+            <p>Nhóm sinh viên thực hiện dự án &mdash; Lớp CQ61/41.1LT</p>
+        </div>
+    </div>
+    <div class="team-grid team-grid-detailed">
+
+        <!-- Thành viên 1 -->
+        <div class="team-card team-card-detailed">
+            <div class="team-card-top">
+                <div class="team-avatar avatar-blue">
+                    <span class="team-stt">05</span>
+                </div>
+                <div class="team-info">
+                    <strong class="team-name">Phạm Thị Ngọc Dung</strong>
+                    <span class="team-class">CQ61/41.1LT</span>
+                    <div class="team-roles">
+                        <span class="role-badge role-controller">
+                            <i class="fa-solid fa-gears"></i> Controller
+                        </span>
+                        <span class="role-badge role-view">
+                            <i class="fa-solid fa-desktop"></i> View
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="team-card-tasks">
+                <div class="task-role-label task-label-controller">
+                    <i class="fa-solid fa-gears"></i> CONTROLLER &amp; VIEW
+                </div>
+                <ul class="task-list">
+                    <li>Xây dựng luồng xử lý chức năng tài chính</li>
+                    <li>Triển khai xác thực, phân quyền và trang quản trị</li>
+                    <li>Phát triển giao diện, dashboard và chế độ sáng/tối</li>
+                    <li>Xây dựng lịch sử sử dụng và nhật ký hoạt động</li>
+                    <li>Phát hiện và sửa lỗi vận hành</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Thành viên 2 -->
+        <div class="team-card team-card-detailed">
+            <div class="team-card-top">
+                <div class="team-avatar avatar-green">
+                    <span class="team-stt">12</span>
+                </div>
+                <div class="team-info">
+                    <strong class="team-name">Nguyễn Khánh Linh</strong>
+                    <span class="team-class">CQ61/41.1LT</span>
+                    <div class="team-roles">
+                        <span class="role-badge role-model">
+                            <i class="fa-solid fa-database"></i> Model
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="team-card-tasks">
+                <div class="task-role-label task-label-model">
+                    <i class="fa-solid fa-wrench"></i> XÂY DỰNG MODEL &amp; KIỂM THỬ
+                </div>
+                <ul class="task-list">
+                    <li>Xây dựng logic tính toán các nghiệp vụ</li>
+                    <li>Viết SQL truy vấn &amp; xử lý dữ liệu cho các chức năng hệ thống</li>
+                    <li>Phân tích User Story, xác định yêu cầu chức năng từng màn hình</li>
+                    <li>Kiểm thử các chức năng trên web, phát hiện &amp; ghi nhận lỗi</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Thành viên 3 -->
+        <div class="team-card team-card-detailed">
+            <div class="team-card-top">
+                <div class="team-avatar avatar-teal">
+                    <span class="team-stt">23</span>
+                </div>
+                <div class="team-info">
+                    <strong class="team-name">Lê Huyền Trang</strong>
+                    <span class="team-class">CQ61/41.1LT</span>
+                    <div class="team-roles">
+                        <span class="role-badge role-view">
+                            <i class="fa-solid fa-desktop"></i> View
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="team-card-tasks">
+                <div class="task-role-label task-label-view">
+                    <i class="fa-solid fa-palette"></i> VIEW (GIAO DIỆN NGƯỜI DÙNG)
+                </div>
+                <ul class="task-list">
+                    <li>Phát triển giao diện cho các chức năng của hệ thống</li>
+                    <li>Xây dựng các màn hình nhập liệu và hiển thị kết quả</li>
+                    <li>Tối ưu giao diện và trải nghiệm người dùng</li>
+                    <li>Kiểm thử và sửa lỗi giao diện</li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const passwordInput = document.getElementById("loginPassword");
+            const toggleButton = document.getElementById("togglePassword");
+
+            if (!passwordInput || !toggleButton) return;
+
+            toggleButton.addEventListener("click", function () {
+                const isHidden = passwordInput.type === "password";
+                passwordInput.type = isHidden ? "text" : "password";
+                toggleButton.textContent = isHidden ? "Ẩn" : "Hiện";
+            });
+        });
+    </script>
+}

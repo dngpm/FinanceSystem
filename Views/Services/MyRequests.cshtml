@@ -1,0 +1,54 @@
+@model List<FinanceSystem.Models.Entities.ServiceRequest>
+@{
+    ViewData["Title"] = "Yêu cầu của tôi";
+}
+
+<div class="container page-shell">
+    <section class="tool-intro">
+        <div>
+            <span class="eyebrow">Dịch vụ tài chính</span>
+            <h1>Yêu cầu của tôi</h1>
+            <p>Theo dõi trạng thái các yêu cầu vay vốn và gửi tiết kiệm đã gửi.</p>
+        </div>
+        <aside class="example-box">
+            <a asp-action="Index" class="btn btn-outline-primary btn-sm">Gửi yêu cầu mới</a>
+        </aside>
+    </section>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive finance-table-wrap">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Ngày gửi</th>
+                        <th>Loại</th>
+                        <th>Sản phẩm</th>
+                        <th>Số tiền</th>
+                        <th>Lãi suất</th>
+                        <th>Trạng thái</th>
+                        <th>Ghi chú admin</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@item.RequestType</td>
+                            <td>@item.ProductType</td>
+                            <td>@item.Amount.ToString("N0")</td>
+                            <td>@item.AnnualRatePercent.ToString("N2")%</td>
+                            <td><span class="badge bg-secondary">@item.Status</span></td>
+                            <td>@item.AdminNote</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

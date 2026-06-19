@@ -1,0 +1,56 @@
+@{
+    ViewData["Title"] = "Quản trị hệ thống";
+}
+
+<div class="container page-shell">
+    <section class="tool-intro" style="margin-bottom: 24px;">
+        <div>
+            <span class="eyebrow">Quản trị hệ thống</span>
+            <h1><i class="fa-solid fa-shield-halved me-2"></i>Quản trị hệ thống</h1>
+            <p>Theo dõi tổng quan hệ thống và quản lý người dùng.</p>
+        </div>
+        <aside class="example-box" style="display:flex; flex-direction:column; gap:10px;">
+            <a asp-action="Users" class="btn btn-outline-primary btn-sm">
+                <i class="fa-solid fa-users me-1"></i> Quản lý người dùng
+            </a>
+        </aside>
+    </section>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fa-solid fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #10b981 !important;">
+                <div class="card-body">
+                    <p class="text-muted small mb-1">Tổng tiền gửi tiết kiệm</p>
+                    <h4 class="fw-bold mb-0">@(((decimal)ViewBag.TotalSavings).ToString("N0")) VND</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #ef4444 !important;">
+                <div class="card-body">
+                    <p class="text-muted small mb-1">Tổng dư nợ cho vay</p>
+                    <h4 class="fw-bold mb-0">@(((decimal)ViewBag.TotalLoan).ToString("N0")) VND</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #6366f1 !important;">
+                <div class="card-body">
+                    <p class="text-muted small mb-1">Người dùng hoạt động</p>
+                    <h4 class="fw-bold mb-0">@ViewBag.ActiveUsers / @ViewBag.TotalUsers</h4>
+                    <small class="text-muted">Bị khóa: @ViewBag.LockedUsers</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
