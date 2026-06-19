@@ -38,7 +38,21 @@ The application will be available at `https://localhost:5039`
 
 ## Screenshots
 
-<!-- Add screenshots here -->
+**Login Page**
+![Login Light](screenshots/login-light.png)
+![Login Dark](screenshots/login-dark.png)
+
+**Home Dashboard**
+![Dashboard](screenshots/dashboard.png)
+
+**Loan Calculation Result**
+![Loan Result](screenshots/loan-result.png)
+
+**Savings Calculation Result**
+![Savings Result](screenshots/savings-result.png)
+
+**Cash Flow Analysis Dashboard**
+![Cash Flow Dashboard](screenshots/cashflow-dashboard.png)
 
 ## Team
 
@@ -94,7 +108,21 @@ dotnet run
 
 ## Ảnh chụp giao diện
 
-<!-- Thêm ảnh chụp giao diện ở đây -->
+**Trang đăng nhập**
+![Login Light](screenshots/login-light.png)
+![Login Dark](screenshots/login-dark.png)
+
+**Trang chủ**
+![Dashboard](screenshots/dashboard.png)
+
+**Kết quả tính lãi vay**
+![Loan Result](screenshots/loan-result.png)
+
+**Kết quả tính lãi tiết kiệm**
+![Savings Result](screenshots/savings-result.png)
+
+**Dashboard phân tích dòng tiền**
+![Cash Flow Dashboard](screenshots/cashflow-dashboard.png)
 
 ## Nhóm thực hiện
 
